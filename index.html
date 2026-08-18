@@ -1,0 +1,2268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <base target="_top">
+    <!-- KODE UNTUK ICON DI LAYAR HP -->
+    <!-- Icon untuk Android (Chrome) -->
+    <link rel="icon" sizes="192x192" href="logo.png">
+    <link rel="icon" sizes="512x512" href="logo.png">
+    
+    <!-- Icon untuk iOS (iPhone / Safari) -->
+    <link rel="apple-touch-icon" href="logo.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="JASTASMA">
+    
+    <!-- Mengatur warna tema browser HP saat aplikasi dibuka -->
+    <meta name="theme-color" content="#1a73e8">
+  
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aplikasi BA Bulog - JASTASMA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .spinner { border: 4px solid rgba(0,0,0,0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #3b82f6; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gray-200 flex items-center justify-center min-h-screen">
+
+    <div id="app-container" class="w-full max-w-md lg:max-w-4xl h-[100dvh] bg-gray-50 relative overflow-hidden sm:rounded-3xl sm:h-[95vh] sm:shadow-2xl flex flex-col transition-all duration-300">
+
+        <!-- OVERLAY LOADING GLOBAL -->
+        <div id="global-loader" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center">
+            <div class="spinner mb-4"></div>
+            <p class="text-sm font-bold text-gray-700" id="loader-text">Memproses...</p>
+        </div>
+
+        <!-- ==================== SPLASH SCREEN ==================== -->
+        <div id="splash-screen" class="absolute inset-0 bg-blue-700 flex flex-col items-center justify-center z-50 transition-opacity duration-500">
+            <div class="text-white text-center animate-bounce">
+                <i class="fa-solid fa-wheat-awn text-7xl mb-4 drop-shadow-md"></i>
+            </div>
+            <h1 class="text-white text-3xl font-extrabold tracking-widest mt-2">JASTASMA</h1>
+            <p class="text-blue-200 text-sm mt-2 font-medium tracking-wide">Sistem BA Terpadu</p>
+        </div>
+
+        <!-- ==================== HALAMAN LOGIN ==================== -->
+        <div id="login-screen" class="screen-view absolute inset-0 bg-white z-40 hidden flex-col px-8 py-12 overflow-y-auto no-scrollbar">
+            <div class="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
+                <div class="text-center mb-10">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4"><i class="fa-solid fa-user-shield text-2xl"></i></div>
+                    <h2 class="text-2xl font-bold text-gray-800">Selamat Datang</h2>
+                </div>
+                <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5">
+                    <div><input type="text" id="username" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Username (e.g. ali)" required></div>
+                    <div class="relative">
+                        <input type="password" id="password" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none pr-12" placeholder="Password" required>
+                        <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-blue-500 focus:outline-none transition-colors">
+                            <i id="eye-icon" class="fa-solid fa-eye text-lg"></i>
+                        </button>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg mt-4 flex justify-center items-center active:scale-95 transition-transform">
+                        Masuk <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ==================== DASHBOARD PETUGAS ==================== -->
+        <div id="dashboard-petugas-screen" class="screen-view absolute inset-0 bg-gray-50 z-30 hidden flex-col">
+            <div class="bg-blue-700 pt-12 pb-6 px-6 rounded-b-[2rem] shadow-md text-white relative lg:rounded-none">
+                <div class="flex justify-between items-center mb-6 max-w-4xl mx-auto">
+                    <div>
+                        <p class="text-blue-200 text-sm">Dashboard Petugas</p>
+                        <h2 class="text-xl font-bold" id="petugas-display-name">Petugas</h2>
+                    </div>
+                    <div onclick="promptLogout()" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center cursor-pointer hover:bg-red-500 transition-colors"><i class="fa-solid fa-right-from-bracket"></i></div>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto px-6 -mt-4 pb-24 no-scrollbar relative z-10 max-w-4xl mx-auto w-full">
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <button onclick="openFormKegiatanPetugas()" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center space-y-3"><div class="w-14 h-14 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-pen-to-square"></i></div><span class="text-sm font-semibold text-gray-700">Input Kegiatan</span></button>
+                    <button onclick="syncDatabase()" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center space-y-3"><div class="w-14 h-14 rounded-full bg-green-50 text-green-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-rotate"></i></div><span class="text-sm font-semibold text-gray-700">Refresh Data</span></button>
+                </div>
+                <h3 class="text-gray-800 font-bold mb-4">Riwayat Anda</h3>
+                <div id="petugas-history-list" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <!-- ==================== DASHBOARD ADMIN ==================== -->
+        <div id="dashboard-admin-screen" class="screen-view absolute inset-0 bg-gray-50 z-30 hidden flex-col">
+            <div class="bg-slate-800 pt-12 pb-6 px-6 rounded-b-[2rem] shadow-md text-white relative lg:rounded-none">
+                <div class="flex justify-between items-center mb-6 max-w-4xl mx-auto">
+                    <div>
+                        <p class="text-slate-300 text-sm">Administrator</p>
+                        <h2 class="text-xl font-bold" id="admin-display-name">Admin</h2>
+                    </div>
+                    <div onclick="promptLogout()" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center cursor-pointer hover:bg-red-500 transition-colors"><i class="fa-solid fa-right-from-bracket"></i></div>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto px-6 -mt-4 pb-24 no-scrollbar relative z-10 max-w-4xl mx-auto w-full">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <button onclick="showScreen('form-spk-screen')" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center space-y-3"><div class="w-14 h-14 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-file-signature"></i></div><span class="text-sm font-semibold text-gray-700">Input SPK</span></button>
+                    <button onclick="showScreen('view-spk-screen')" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center space-y-3"><div class="w-14 h-14 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-list-check"></i></div><span class="text-sm font-semibold text-gray-700">View SPK</span></button>
+                    <button onclick="showScreen('view-aktivitas-screen')" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center space-y-3"><div class="w-14 h-14 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-users-viewfinder"></i></div><span class="text-sm font-semibold text-gray-700">View Aktivitas</span></button>
+                    <button onclick="syncDatabase()" class="bg-white p-4 rounded-2xl shadow-sm border border-green-100 flex flex-col items-center justify-center space-y-3"><div class="w-14 h-14 rounded-full bg-green-50 text-green-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-cloud-arrow-down"></i></div><span class="text-sm font-semibold text-gray-700">Sync Data</span></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== FORM SPK (ADMIN) ==================== -->
+        <div id="form-spk-screen" class="screen-view absolute inset-0 bg-gray-50 z-50 hidden flex-col">
+            <div class="bg-white border-b border-gray-200 pt-10 pb-4 px-4 flex items-center sticky top-0 z-10"><button type="button" onclick="goBack()" class="w-10 h-10 flex items-center justify-center rounded-full"><i class="fa-solid fa-arrow-left"></i></button><h2 class="text-lg font-bold ml-2">Input SPK Baru</h2></div>
+            <div class="flex-1 overflow-y-auto p-5 pb-24 max-w-4xl mx-auto w-full">
+                <form onsubmit="submitSPK(event)" class="space-y-4 bg-white p-5 rounded-xl border border-gray-100">
+                    <div><label class="block text-sm font-medium mb-1">Unit Kerja (Fix)</label><input type="text" value="Kanwil Yogyakarta" readonly class="w-full p-3 rounded-lg bg-gray-100 text-gray-600 font-bold"></div>
+                    <div><label class="block text-sm font-medium mb-1">Tanggal SPK</label><input type="date" id="spk-tanggal" class="w-full p-3 rounded-lg border bg-gray-50" required></div>
+                    <div><label class="block text-sm font-medium mb-1">Komper (Gudang)</label><select id="spk-komper" onchange="updateAdminUnitDropdown()" class="w-full p-3 rounded-lg border bg-gray-50" required></select></div>
+                    <div><label class="block text-sm font-medium mb-1">Unit Gudang</label><select id="spk-unit" class="w-full p-3 rounded-lg border bg-gray-50" required disabled></select></div>
+                    <div><label class="block text-sm font-medium mb-1">Nomor SPK</label><input type="text" id="spk-nomor" class="w-full p-3 rounded-lg border bg-gray-50 uppercase" required></div>
+                    <div><label class="block text-sm font-medium mb-1">Jenis Kegiatan</label><select id="spk-jenis" class="w-full p-3 rounded-lg border bg-gray-50" required><option value="">-- Pilih --</option><option value="Spraying">Spraying</option><option value="Fumigasi + Spraying">Fumigasi + Spraying</option></select></div>
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg mt-4">Simpan SPK</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ==================== FORM KEGIATAN (PETUGAS) ==================== -->
+        <div id="form-kegiatan-screen" class="screen-view absolute inset-0 bg-gray-50 z-50 hidden flex-col">
+            <div class="bg-white border-b border-gray-200 pt-10 pb-4 px-4 flex items-center sticky top-0 z-10 shadow-sm"><button type="button" onclick="goBack()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100"><i class="fa-solid fa-arrow-left"></i></button><h2 class="text-lg font-bold ml-2">Input Kegiatan</h2></div>
+            <div class="flex-1 overflow-y-auto p-5 pb-24 max-w-4xl mx-auto w-full">
+                <form onsubmit="submitKegiatan(event)" class="space-y-5">
+                    
+                    <!-- 1. SPK & LOKASI -->
+                    <div class="bg-white p-4 rounded-xl border border-gray-200 space-y-3 shadow-sm">
+                        <label class="block text-sm font-bold text-gray-700 border-b pb-2"><i class="fa-solid fa-location-dot mr-2 text-blue-500"></i>SPK & Lokasi</label>
+                        <div><label class="text-[11px] text-gray-500 font-bold">Komper</label><select id="input-komper" onchange="updatePetugasUnitDropdown()" class="w-full p-2.5 text-sm rounded-lg border bg-gray-50" required></select></div>
+                        <div><label class="text-[11px] text-gray-500 font-bold">Unit Gudang</label><select id="input-unit" onchange="onPetugasSPKSelected()" class="w-full p-2.5 text-sm rounded-lg border bg-gray-50" required disabled></select></div>
+                        <div class="grid grid-cols-2 gap-2 mt-2">
+                            <div><label class="text-[11px] text-gray-500">Nomor SPK</label><input type="text" id="auto-spk" class="w-full p-2 text-sm bg-gray-100 rounded-lg text-center" readonly></div>
+                            <div><label class="text-[11px] text-gray-500">Jenis Kegiatan</label><input type="text" id="input-kegiatan" class="w-full p-2 text-sm bg-blue-50 text-blue-700 font-bold rounded-lg text-center" readonly></div>
+                        </div>
+                    </div>
+
+                    <!-- HIDDEN DYNAMIC CONTAINER (Muncul setelah unit dipilih) -->
+                    <div id="dynamic-inputs-container" class="hidden space-y-5">
+                      
+                        <!-- 1.5 INFO UKURAN GUDANG (BARU) -->
+                        <div class="bg-sky-50 p-4 rounded-xl border border-sky-200 shadow-sm">
+                            <h4 class="font-bold text-sm text-sky-800 border-b border-sky-200 pb-2 mb-3"><i class="fa-solid fa-warehouse mr-2"></i>Data Ukuran Gudang</h4>
+                            <div class="grid grid-cols-3 gap-3 text-center">
+                                <div class="bg-white p-2 rounded-lg border border-sky-100 shadow-sm">
+                                    <span class="block text-[10px] text-gray-500 font-bold uppercase mb-1">Panjang</span>
+                                    <span id="info-gudang-p" class="font-black text-sky-700 text-lg">-</span><span class="text-xs text-gray-500 ml-1">m</span>
+                                </div>
+                                <div class="bg-white p-2 rounded-lg border border-sky-100 shadow-sm">
+                                    <span class="block text-[10px] text-gray-500 font-bold uppercase mb-1">Lebar</span>
+                                    <span id="info-gudang-l" class="font-black text-sky-700 text-lg">-</span><span class="text-xs text-gray-500 ml-1">m</span>
+                                </div>
+                                <div class="bg-white p-2 rounded-lg border border-sky-100 shadow-sm">
+                                    <span class="block text-[10px] text-gray-500 font-bold uppercase mb-1">Tinggi</span>
+                                    <span id="info-gudang-t" class="font-black text-sky-700 text-lg">-</span><span class="text-xs text-gray-500 ml-1">m</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. WAKTU PELAKSANAAN -->
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                            <h4 class="font-bold text-sm text-gray-700 border-b pb-2 mb-3"><i class="fa-regular fa-clock mr-2 text-blue-500"></i>Waktu Pelaksanaan</h4>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div><label class="text-[11px] text-gray-500 font-bold">Tgl Mulai</label><input type="date" id="input-tgl-mulai" class="w-full p-2 border rounded-lg text-sm bg-gray-50" required></div>
+                                <div><label class="text-[11px] text-gray-500 font-bold">Tgl Selesai</label><input type="date" id="input-tgl-selesai" class="w-full p-2 border rounded-lg text-sm bg-gray-50" required></div>
+                            </div>
+                        </div>
+
+                        <!-- 3. KOMODITAS & STAPEL -->
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                            <h4 class="font-bold text-sm text-gray-700 border-b pb-2 mb-3"><i class="fa-solid fa-cubes mr-2 text-blue-500"></i>Komoditas & Stapel Gudang</h4>
+                            
+                            <div class="mb-4 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+                                <label class="block text-xs font-bold text-gray-700 mb-2">Checklist Jenis Komoditas</label>
+                                <div id="komoditas-checkboxes-container" class="grid grid-cols-2 gap-2">
+                                    <!-- Dinamis dari DB_KOMODITAS -->
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="block text-xs font-bold mb-1 text-gray-700">Berapa Jumlah Stapel?</label>
+                                <input type="number" id="input-jml-stapel" oninput="renderStapelForms()" class="w-full p-2.5 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500" min="" max="20" placeholder="Ketik angka (1-20)">
+                            </div>
+                            
+                            <!-- Container Sub-Form Stapel Otomatis -->
+                            <div id="stapel-forms-container" class="space-y-3 mt-3 border-l-2 border-blue-200 pl-3 ml-1 transition-all"></div>
+                            
+                            <div class="mt-4 p-3 bg-gray-100 rounded-lg text-center border border-gray-200">
+                                <span class="text-xs text-gray-500 font-bold block">TOTAL TONASE STAPEL</span>
+                                <span id="display-total-tonase" class="text-2xl font-black text-blue-600">0</span> <span class="text-sm font-bold text-gray-500">Ton</span>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Jumlah Broken Space</label>
+                                <input type="number" id="input-jml-broken" oninput="renderBrokenForms()" value="0" min="0" max="10" class="w-full p-2 border border-orange-300 rounded-md text-sm bg-orange-50 focus:ring-1 focus:ring-orange-500">
+                            </div>
+
+                            <!-- Tempat form detail dimensi broken space akan muncul -->
+                            <div id="broken-forms-container" class="space-y-2 mb-3"></div>
+
+                            <div class="mb-4">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Total Broken Space (Otomatis)</label>
+                                <div class="flex items-center">
+                                    <input type="number" id="input-broken-space" readonly class="w-full p-2 border border-gray-300 rounded-l-md text-sm bg-gray-200 font-bold text-gray-700" placeholder="0">
+                                    <span class="bg-gray-300 text-gray-700 p-2 text-sm font-bold border border-gray-300 rounded-r-md">Ton</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. PENGENDALI OBAT & HAMA -->
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-3">
+                            <h4 class="font-bold text-sm text-gray-700 border-b pb-2"><i class="fa-solid fa-flask mr-2 text-blue-500"></i>Pengendali Obat & Hama</h4>
+                            <div>
+                                <div>
+                                    <label class="block text-xs font-bold mb-2 text-blue-800">Pilih Insektisida (Bisa >1)</label>
+                                    <div id="insektisida-checkboxes" class="grid grid-cols-2 gap-2 text-sm bg-white p-2.5 rounded-lg border border-blue-100 shadow-sm">
+                                        <!-- Akan diisi otomatis dari DB_INSEKTISIDA -->
+                                    </div>
+                                    <div id="insektisida-lokasi-container" class="space-y-2 mt-2">
+                                        <!-- Akan muncul input liter jika insektisida dicentang > 1 -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Khusus Fumigasi -->
+                            <div id="fumigasi-inputs" class="hidden mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold mb-2 text-amber-800">Pilih Fumigan (Bisa >1)</label>
+                                    <div id="fumigan-checkboxes" class="grid grid-cols-2 gap-2 text-sm bg-white p-2.5 rounded-lg border border-amber-100 shadow-sm">
+                                        <!-- Dinamis dari DB_FUMIGAN -->
+                                    </div>
+                                    <div id="fumigan-lokasi-container" class="space-y-2 mt-2">
+                                        <!-- Akan muncul input alokasi nomor stapel jika fumigan dicentang > 1 -->
+                                    </div>
+                                </div>
+                                <hr class="border-amber-200">
+                                <div class="grid grid-cols-1 gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-gray-700 mb-1">Jenis Hama (Bisa >1)</label>
+                                        <div id="hama-checkboxes" class="grid grid-cols-2 gap-2 text-sm bg-white p-2.5 rounded-lg border border-gray-200 shadow-sm">
+                                            <!-- Akan diisi otomatis dari database -->
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-gray-700 mb-1">Tingkat Serangan</label>
+                                        <select id="input-tingkat-serangan" class="w-full p-2 border rounded-lg bg-white">
+                                            <option value="">-- Pilih --</option>
+                                            <option value="Ringan">Ringan</option>
+                                            <option value="Sedang">Sedang</option>
+                                            <option value="Berat">Berat</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-700">Jumlah Plastik Sungkup</label>
+                                    <input type="number" id="input-jml-plastik" class="w-full p-2 border rounded-lg bg-white" placeholder="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. BOX HITUNGAN KALKULASI REALTIME -->
+                        <div class="bg-slate-800 text-white p-5 rounded-2xl shadow-xl border border-slate-700">
+                            <h4 class="font-bold text-slate-200 border-b border-slate-600 pb-2 mb-4 flex items-center justify-between">
+                                <span><i class="fa-solid fa-calculator text-blue-400 mr-2"></i>Hasil Perhitungan Auto</span>
+                                <span class="text-[10px] bg-slate-700 px-2 py-1 rounded text-gray-400">Live</span>
+                            </h4>
+                            
+                            <div class="space-y-2 text-xs mb-4 font-mono">
+                                <div class="flex justify-between"><span>Dinding Memanjang</span><span id="calc-memanjang">0 m²</span></div>
+                                <div class="flex justify-between"><span>Dinding Melebar</span><span id="calc-melebar">0 m²</span></div>
+                                <div class="flex justify-between"><span>Atap & Lantai</span><span id="calc-atap">0 m²</span></div>
+                                <div class="flex justify-between"><span>Teras Gudang</span><span id="calc-teras">0 m²</span></div>
+                                <div class="flex justify-between"><span>Permukaan Stapel</span><span id="calc-stapel">0 m²</span></div>
+                                <div class="flex justify-between text-yellow-300 font-bold border-t border-slate-600 pt-1 mt-1"><span>Luas Awal (Total)</span><span id="calc-awal">0 m²</span></div>
+                                <div class="flex justify-between text-red-400"><span>Lantai (-) Non Spray</span><span id="calc-lantai">-0 m²</span></div>
+                                
+                                <div class="flex justify-between items-center text-green-400 font-bold text-sm border-t border-slate-600 pt-3 mt-3 bg-slate-700/50 p-2 rounded-lg">
+                                    <span>LUAS SASARAN SPRAYING</span>
+                                    <span id="calc-akhir" class="text-lg">0 m²</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-700 p-4 rounded-xl border border-slate-600 space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-blue-300 font-bold text-sm"><i class="fa-solid fa-flask mr-2"></i>Insektisida (0,25)</span>
+                                    <span id="calc-insek" class="text-white font-black bg-blue-600 px-3 py-1 rounded-lg shadow-inner">0 L</span>
+                                </div>
+                                <div id="calc-box-fumi" class="hidden justify-between items-center border-t border-slate-600 pt-3">
+                                    <span class="text-amber-300 font-bold text-sm"><i class="fa-solid fa-tablets mr-2"></i>Fumigan (x2)</span>
+                                    <span id="calc-fumi" class="text-white font-black bg-amber-600 px-3 py-1 rounded-lg shadow-inner">0 Btr</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div> <!-- Akhir dynamic container -->
+
+                    <!-- KETERANGAN TAMBAHAN (BARU) -->
+                    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <label class="block text-sm font-bold text-gray-700 mb-2"><i class="fa-solid fa-clipboard-list mr-2 text-blue-500"></i>Keterangan Tambahan</label>
+                        <textarea id="input-keterangan" rows="3" class="w-full p-3 border rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Tuliskan catatan kondisi lapangan, kendala, atau info tambahan lainnya..."></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg mt-6 active:scale-95 transition-transform text-lg"><i class="fa-solid fa-paper-plane mr-2"></i>Simpan Laporan Pekerjaan</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ==================== VIEW DETAIL & EDIT PETUGAS ==================== -->
+        <div id="detail-laporan-screen" class="screen-view absolute inset-0 bg-gray-50 z-50 hidden flex-col">
+            <div class="bg-white border-b pt-10 pb-4 px-4 flex items-center sticky top-0 shadow-sm z-10">
+                <button onclick="goBack()" class="w-10 h-10 hover:bg-gray-100 rounded-full transition"><i class="fa-solid fa-arrow-left"></i></button>
+                <h2 class="text-lg font-bold ml-2">Detail Laporan Kegiatan</h2>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-5 pb-24 max-w-4xl mx-auto w-full space-y-4">
+                <!-- 1-5: Info Utama & Lokasi -->
+                <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-sm space-y-2">
+                    <h4 class="font-bold text-gray-700 border-b pb-2 mb-2"><i class="fa-solid fa-circle-info text-blue-500 mr-2"></i>Informasi Utama</h4>
+                    <div class="flex justify-between"><span class="text-gray-500">Nomor SPK</span><span id="det-spk" class="font-bold text-gray-800"></span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Kegiatan</span><span id="det-kegiatan" class="font-bold text-blue-600"></span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Waktu</span><span id="det-waktu" class="font-bold text-gray-800"></span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Lokasi</span><span id="det-lokasi" class="font-bold text-gray-800"></span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Ukuran Gudang</span><span id="det-ukuran" class="font-bold text-sky-600"></span></div>
+                </div>
+
+                <!-- 6-8: Komoditas -->
+                <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-sm space-y-2">
+                    <h4 class="font-bold text-gray-700 border-b pb-2 mb-2"><i class="fa-solid fa-cubes text-blue-500 mr-2"></i>Komoditas & Stapel</h4>
+                    <div class="flex justify-between"><span class="text-gray-500">Tonase Total</span><span id="det-tonase" class="font-bold text-gray-800"></span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Jml Stapel</span><span id="det-stapel" class="font-bold text-gray-800"></span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Broken Space</span><span id="det-broken" class="font-bold text-red-500"></span></div>
+                    <div>
+                        <span class="text-gray-500 block mb-1">Jenis Komoditas:</span>
+                        <span id="det-komoditas" class="font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded"></span>
+                    </div>
+                </div>
+
+                <!-- 9-13: Obat, Hama & Kalkulasi -->
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm text-sm space-y-2 text-slate-300">
+                    <h4 class="font-bold text-white border-b border-slate-600 pb-2 mb-2"><i class="fa-solid fa-flask text-green-400 mr-2"></i>Data Penanganan</h4>
+                    
+                    <div class="flex justify-between items-center"><span class="text-slate-400">Insektisida</span><span id="det-insek" class="font-bold text-white"></span></div>
+                    <div class="flex justify-between items-center bg-slate-700/50 p-2 rounded-lg mt-1"><span class="text-slate-400">Total Digunakan</span><span id="det-total-insek" class="font-black text-blue-400"></span></div>
+
+                    <div id="det-fumi-box" class="border-t border-slate-600 pt-3 mt-3 space-y-2 hidden">
+                        <div class="flex justify-between items-center"><span class="text-slate-400">Fumigan</span><span id="det-fumi-jenis" class="font-bold text-white"></span></div>
+                        <div class="flex justify-between items-center bg-slate-700/50 p-2 rounded-lg"><span class="text-slate-400">Total Digunakan</span><span id="det-total-fumi" class="font-black text-amber-400"></span></div>
+                        <div class="grid grid-cols-3 gap-2 mt-2 text-center text-[10px]">
+                            <div class="bg-slate-700 p-1 rounded"><span class="block text-slate-400">Hama</span><span id="det-hama" class="font-bold text-white truncate"></span></div>
+                            <div class="bg-slate-700 p-1 rounded"><span class="block text-slate-400">Serangan</span><span id="det-serangan" class="font-bold text-white"></span></div>
+                            <div class="bg-slate-700 p-1 rounded"><span class="block text-slate-400">Plastik</span><span id="det-plastik" class="font-bold text-white"></span></div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-600 pt-3 mt-3">
+                        <span class="text-slate-400 block mb-2 font-bold text-xs">Detail Luas Permukaan:</span>
+                        <div class="space-y-1 text-xs font-mono">
+                            <div class="flex justify-between"><span>Dinding Memanjang</span><span id="det-calc-p">0</span></div>
+                            <div class="flex justify-between"><span>Dinding Melebar</span><span id="det-calc-l">0</span></div>
+                            <div class="flex justify-between"><span>Atap & Lantai</span><span id="det-calc-a">0</span></div>
+                            <div class="flex justify-between"><span>Teras Gudang</span><span id="det-calc-t">0</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex space-x-3 mt-6">
+                    <!-- Tombol Edit (Hanya Muncul Jika PDF Belum Final) -->
+                    <button id="btn-edit-petugas" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl shadow-lg flex justify-center items-center active:scale-95 transition-transform">
+                        <i class="fa-solid fa-pen-to-square mr-2"></i> Edit Data
+                    </button>
+                    
+                    <!-- Tombol Download BA Final (Hanya Muncul Jika Admin Sudah Buat PDF) -->
+                    <button id="btn-download-pdf" class="hidden flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-xl shadow-lg flex justify-center items-center active:scale-95 transition-transform">
+                        <i class="fa-solid fa-cloud-arrow-down mr-2"></i> Unduh BA Final
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== VIEW SCREENS (ADMIN) ==================== -->
+        <div id="view-spk-screen" class="screen-view absolute inset-0 bg-gray-50 z-50 hidden flex-col"><div class="bg-white border-b pt-10 pb-4 px-4 flex items-center sticky top-0 shadow-sm"><button onclick="goBack()" class="w-10 h-10 hover:bg-gray-100 rounded-full transition"><i class="fa-solid fa-arrow-left"></i></button><h2 class="text-lg font-bold ml-2">Daftar SPK</h2></div><div id="admin-spk-list" class="flex-1 overflow-y-auto p-5 space-y-3 w-full max-w-4xl mx-auto"></div></div>
+        <div id="view-aktivitas-screen" class="screen-view absolute inset-0 bg-gray-50 z-50 hidden flex-col"><div class="bg-white border-b pt-10 pb-4 px-4 flex items-center sticky top-0 shadow-sm"><button onclick="goBack()" class="w-10 h-10 hover:bg-gray-100 rounded-full transition"><i class="fa-solid fa-arrow-left"></i></button><h2 class="text-lg font-bold ml-2">Log Aktivitas Petugas</h2></div><div id="admin-aktivitas-list" class="flex-1 overflow-y-auto p-5 space-y-4 w-full max-w-4xl mx-auto"></div></div>
+
+        <!-- MODAL EDIT & GENERATE ADMIN -->
+        <div id="modal-edit" class="absolute inset-0 bg-black/60 z-[70] hidden items-center justify-center backdrop-blur-sm transition-opacity">
+            <div class="bg-white w-[90%] max-w-md rounded-2xl p-6 shadow-2xl relative transform scale-95 transition-transform">
+                <h3 class="text-lg font-bold mb-4 border-b pb-2 text-gray-800">Edit Data Laporan</h3>
+                <input type="hidden" id="edit-row-id">
+                <div class="space-y-4 text-sm">
+                    <div><label class="block font-bold mb-1 text-gray-700">Tgl Pelaksanaan</label><input type="text" id="edit-tgl" class="w-full p-2.5 border rounded-lg bg-gray-50"></div>
+                    <div><label class="block font-bold mb-1 text-gray-700">Total Tonase Komoditas</label><input type="number" step="0.01" id="edit-tonase" class="w-full p-2.5 border rounded-lg bg-gray-50"></div>
+                    <div><label class="block font-bold mb-1 text-gray-700">Broken Space (Ton)</label><input type="number" step="0.01" id="edit-broken" class="w-full p-2.5 border rounded-lg bg-gray-50"></div>
+                </div>
+                <div class="flex space-x-3 mt-6">
+                    <button onclick="closeModalEdit()" class="flex-1 bg-gray-200 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-300">Batal</button>
+                    <button onclick="saveEdit()" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 shadow-md">Simpan Edit</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-generate" class="absolute inset-0 bg-black/60 z-[70] hidden items-center justify-center backdrop-blur-sm transition-opacity">
+            <div class="bg-white w-80 rounded-3xl p-8 text-center shadow-2xl">
+                <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-5 animate-bounce"><i class="fa-solid fa-file-pdf"></i></div>
+                <h3 class="text-xl font-black text-gray-800 mb-2">Generate Berita Acara</h3>
+                <p id="gen-text-info" class="text-sm text-gray-500 mb-6 font-medium">Sedang memproses dokumen PDF untuk SPK <span id="gen-spk-name" class="font-bold text-gray-800"></span>...</p>
+                <div class="w-full bg-gray-100 rounded-full h-3 mb-6 overflow-hidden"><div class="bg-green-500 h-3 rounded-full w-0" id="gen-progress" style="transition: width 0.5s ease-in-out;"></div></div>
+
+                <!-- Tambahkan div ini untuk tempat tombol Download -->
+                <div id="gen-action-container" class="space-y-3 hidden"></div>
+
+                <!-- Tombol tutup -->
+                <button id="gen-close-btn" onclick="document.getElementById('modal-generate').classList.replace('flex','hidden')" class="hidden w-full bg-slate-800 text-white font-bold py-3 rounded-xl hover:bg-slate-700 transition shadow">Tutup</button>
+            </div>
+        </div>
+
+        <!-- DIALOG STANDAR -->
+        <div id="custom-dialog" class="absolute inset-0 bg-black/60 z-[80] hidden items-center justify-center backdrop-blur-sm"><div class="bg-white w-80 rounded-2xl p-6 text-center shadow-xl"><h3 id="dialog-title" class="text-xl font-bold mb-2"></h3><p id="dialog-message" class="text-sm text-gray-500 mb-6"></p><div id="dialog-btns"></div></div></div>
+    </div>
+
+    <!-- <script>
+        const GAS_URL = "<?= ScriptApp.getService().getUrl() ?>"; 
+        
+        let DB_PEGAWAI=[], DB_GUDANG=[], DB_KOMODITAS=[], DB_FUMIGAN=[], DB_INSEKTISIDA=[], DB_HAMA=[];
+        let spk_list=[], aktivitas_list=[];
+        let currentEditRowId = null;
+        let currentRole="", currentUser="";
+
+        // ==================== 1. SYNC & INIT DATA ====================
+        window.onload = function() { 
+            syncDatabase(true); 
+            setTimeout(() => { document.getElementById('splash-screen').style.opacity = '0'; setTimeout(() => { document.getElementById('splash-screen').classList.add('hidden'); showScreen('login-screen'); }, 500); }, 1500); 
+        }
+
+        async function syncDatabase(isInitial = false) {
+            if(!isInitial) showLoader("Menyinkronkan Data...");
+            try {
+                const res = await fetch(GAS_URL + "?api=true", { redirect: "follow" });
+                const data = await res.json();
+                if(data.status === "success") {
+                    spk_list = data.spk || []; aktivitas_list = data.aktivitas || [];
+                    DB_PEGAWAI = data.pegawai || []; DB_GUDANG = data.gudang || [];
+                    DB_KOMODITAS = data.komoditas || []; DB_FUMIGAN = data.fumigan || [];
+                    DB_INSEKTISIDA = data.insektisida || []; DB_HAMA = data.hama || [];
+                    
+                    renderSPKView(); 
+                    renderAktivitasView(); 
+                    populateDynamicDropdowns();
+                }
+            } catch (e) { alert("Error koneksi: " + e); }
+            finally { if(!isInitial) hideLoader(); }
+        }
+
+        function populateDynamicDropdowns() {
+            const fillOptions = (id, arr) => {
+                const sel = document.getElementById(id); if(!sel) return;
+                sel.innerHTML = '<option value="">-- Pilih --</option>';
+                arr.forEach(a => sel.add(new Option(Object.values(a)[0], Object.values(a)[0])));
+            };
+            
+            // Komper Admin
+            const selK = document.getElementById('spk-komper');
+            if(selK) {
+                selK.innerHTML = '<option value="">-- Pilih Komper --</option>';
+                [...new Set(DB_GUDANG.map(g=>g.Gudang))].forEach(k => { if(k) selK.add(new Option(k,k)); });
+            }
+
+            // Checklist Insektisida (Multiselect)
+            const insekBox = document.getElementById('insektisida-checkboxes');
+            if(insekBox) {
+                insekBox.innerHTML = '';
+                DB_INSEKTISIDA.forEach(f => {
+                    let nama = Object.values(f)[0];
+                    if(nama) {
+                        insekBox.innerHTML += `<label class="flex items-center space-x-2"><input type="checkbox" value="${nama}" class="insek-chk w-4 h-4 text-blue-600 rounded" onchange="onInsekChange()"><span class="text-xs text-gray-700">${nama}</span></label>`;
+                    }
+                });
+            }
+
+            // Checklist Hama (Bisa lebih dari 1)
+            const hamaBox = document.getElementById('hama-checkboxes');
+            if(hamaBox) {
+                hamaBox.innerHTML = '';
+                DB_HAMA.forEach(h => {
+                    let nama = Object.values(h)[0];
+                    if(nama) {
+                        hamaBox.innerHTML += `<label class="flex items-center space-x-2"><input type="checkbox" value="${nama}" class="hama-chk w-4 h-4 text-blue-600 rounded"><span class="text-xs text-gray-700 truncate">${nama}</span></label>`;
+                    }
+                });
+            }
+            
+            // Checklist Komoditas 
+            const komContainer = document.getElementById('komoditas-checkboxes-container');
+            if(komContainer) {
+                komContainer.innerHTML = '';
+                DB_KOMODITAS.forEach(k => {
+                    let nama = Object.values(k)[0];
+                    if(nama) {
+                        komContainer.innerHTML += `<label class="flex items-center space-x-2 text-sm bg-white p-2 rounded border border-gray-100 shadow-sm"><input type="checkbox" value="${nama}" class="komo-chk w-4 h-4 text-blue-600 rounded"><span>${nama}</span></label>`;
+                    }
+                });
+            }
+
+            // Multiselect Fumigan
+            const fumiBox = document.getElementById('fumigan-checkboxes');
+            if(fumiBox) {
+                fumiBox.innerHTML = '';
+                DB_FUMIGAN.forEach(f => {
+                    let nama = Object.values(f)[0];
+                    if(nama) {
+                        fumiBox.innerHTML += `<label class="flex items-center space-x-2"><input type="checkbox" value="${nama}" class="fumi-chk w-4 h-4 text-amber-600 rounded" onchange="onFumiganChange()"><span class="text-xs text-gray-700">${nama}</span></label>`;
+                    }
+                });
+            }
+        }
+
+        // ==================== 2. LOGIC ADMIN ====================
+        function updateAdminUnitDropdown() {
+            const k = document.getElementById('spk-komper').value;
+            const sel = document.getElementById('spk-unit'); 
+            sel.innerHTML = '<option value="">-- Pilih Unit --</option>';
+            if(k) { 
+                sel.disabled = false; 
+                DB_GUDANG.filter(g=>g.Gudang===k).forEach(g=>{ if(g.Unit) sel.add(new Option(g.Unit, g.Unit)) }); 
+            } else { sel.disabled = true; }
+        }
+
+        async function submitSPK(e) {
+            e.preventDefault(); showLoader("Menyimpan SPK...");
+            const payload = {
+                action: "addSPK", data: {
+                    tanggal: document.getElementById('spk-tanggal').value, 
+                    komper: document.getElementById('spk-komper').value,
+                    unit: document.getElementById('spk-unit').value, 
+                    nomor: document.getElementById('spk-nomor').value.toUpperCase(),
+                    jenis: document.getElementById('spk-jenis').value
+                }
+            };
+            await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+            await syncDatabase(); goBack(); e.target.reset();
+        }
+
+        // ==================== 3. LOGIC PETUGAS (DINAMIS & STAPEL) ====================
+        function openFormKegiatanPetugas() {
+            currentEditRowId = null; // Penanda mode Input Baru
+            document.querySelector('#form-kegiatan-screen h2').innerText = "Input Kegiatan"; // Reset Judul Form
+            
+            const selK = document.getElementById('input-komper'); 
+            selK.innerHTML = '<option value="">-- Pilih Komper --</option>';
+            
+            const actives = [...new Set(spk_list.filter(s=>s.Status==="Belum Dikerjakan").map(s=>s.Komper))];
+            if(actives.length===0) { showDialog('Tugas Kosong', 'Tidak ada SPK aktif saat ini.'); return; }
+            actives.forEach(a => selK.add(new Option(a,a)));
+            
+            document.getElementById('input-unit').disabled = true; 
+            document.getElementById('dynamic-inputs-container').classList.add('hidden');
+            document.getElementById('stapel-forms-container').innerHTML = ''; 
+            document.getElementById('display-total-tonase').innerText = '0';
+            
+            // Reset input broken space
+            if(document.getElementById('input-jml-broken')) document.getElementById('input-jml-broken').value = 0;
+            if(document.getElementById('broken-forms-container')) document.getElementById('broken-forms-container').innerHTML = '';
+            if(document.getElementById('input-broken-space')) document.getElementById('input-broken-space').value = '';
+            
+            // Reset checklist hama
+            document.querySelectorAll('.hama-chk').forEach(chk => chk.checked = false);
+
+            // Reset Insektisida
+            document.querySelectorAll('.insek-chk').forEach(chk => chk.checked = false);
+            if(document.getElementById('insektisida-lokasi-container')) document.getElementById('insektisida-lokasi-container').innerHTML = '';
+
+            showScreen('form-kegiatan-screen');
+        }
+
+        function updatePetugasUnitDropdown() {
+            const k = document.getElementById('input-komper').value;
+            const sel = document.getElementById('input-unit'); 
+            sel.innerHTML = '<option value="">-- Pilih Unit --</option>';
+            if(k) {
+                sel.disabled = false; 
+                spk_list.filter(s=>s.Komper===k && s.Status==="Belum Dikerjakan").forEach(s=>sel.add(new Option(s.Unit_Gudang, s.Unit_Gudang)));
+            } else { sel.disabled = true; }
+            onPetugasSPKSelected();
+        }
+
+        function onPetugasSPKSelected() {
+            const k = document.getElementById('input-komper').value;
+            const u = document.getElementById('input-unit').value;
+            const spk = spk_list.find(s=>s.Komper===k && s.Unit_Gudang===u && s.Status==="Belum Dikerjakan");
+                        
+            if(spk) {
+                document.getElementById('auto-spk').value = spk.Nomor_SPK; 
+                document.getElementById('input-kegiatan').value = spk.Jenis;
+                document.getElementById('dynamic-inputs-container').classList.remove('hidden');
+                
+                const gudangData = DB_GUDANG.find(g => g.Gudang === k && g.Unit === u);
+                if(gudangData) {
+                    document.getElementById('info-gudang-p').innerText = gudangData.Panjang || 0;
+                    document.getElementById('info-gudang-l').innerText = gudangData.Lebar || 0;
+                    document.getElementById('info-gudang-t').innerText = gudangData.Tinggi || 0;
+                } else {
+                    document.getElementById('info-gudang-p').innerText = "-";
+                    document.getElementById('info-gudang-l').innerText = "-";
+                    document.getElementById('info-gudang-t').innerText = "-";
+                }
+                                
+                const fumiInputs = document.getElementById('fumigasi-inputs');
+                const calcBoxFumi = document.getElementById('calc-box-fumi');
+                
+                if(spk.Jenis.toLowerCase().includes('fumigasi')) { 
+                    fumiInputs.classList.remove('hidden'); 
+                    calcBoxFumi.classList.remove('hidden'); calcBoxFumi.classList.add('flex'); 
+                } else { 
+                    fumiInputs.classList.add('hidden'); 
+                    calcBoxFumi.classList.add('hidden'); calcBoxFumi.classList.remove('flex');
+                }
+                hitungKalkulasi();
+            } else {
+                document.getElementById('dynamic-inputs-container').classList.add('hidden');
+            }
+        }
+
+        // GENERATOR FORM STAPEL 
+        function renderStapelForms() {
+            let n = parseInt(document.getElementById('input-jml-stapel').value) || 0;
+            if (n > 20) { n = 20; document.getElementById('input-jml-stapel').value = 20; }
+            if (n < 0) { n = 0; document.getElementById('input-jml-stapel').value = 0; }
+            
+            let container = document.getElementById('stapel-forms-container');
+            let html = '';
+            
+            let komOpts = '<option value="">Pilih Komoditas</option>';
+            DB_KOMODITAS.forEach(k => { let nama = Object.values(k)[0]; if(nama) komOpts += `<option value="${nama}">${nama}</option>`; });
+
+            for(let i=1; i<=n; i++) {
+                html += `
+                <div class="p-3 border border-blue-100 rounded-lg bg-white shadow-sm mb-2 relative">
+                    <span class="absolute -left-2 -top-2 bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-2 border-white shadow-sm">${i}</span>
+                    <div class="grid grid-cols-2 gap-2 mt-1">
+                        <div><label class="text-[10px] text-gray-500 font-bold">Tonase Stapel (Ton)</label><input type="number" id="stapel-tonase-${i}" step="0.01" oninput="hitungKalkulasi()" class="stapel-val-input w-full p-2 border rounded-md text-sm bg-gray-50 focus:ring-1 focus:ring-blue-500"></div>
+                        <div><label class="text-[10px] text-gray-500 font-bold">Komoditas</label><select id="stapel-komoditas-${i}" class="w-full p-2 border rounded-md text-xs bg-gray-50">${komOpts}</select></div>
+                    </div>
+                </div>`;
+            }
+            container.innerHTML = html;
+            hitungKalkulasi();
+        }
+        
+        // ==================== GENERATOR BROKEN SPACE ====================
+        // Pindah kesini agar sejajar dan dikenali oleh sistem (global scope)
+        function renderBrokenForms() {
+            let n = parseInt(document.getElementById('input-jml-broken').value) || 0;
+            if (n > 10) { n = 10; document.getElementById('input-jml-broken').value = 10; }
+            if (n < 0) { n = 0; document.getElementById('input-jml-broken').value = 0; }
+            
+            let container = document.getElementById('broken-forms-container');
+            let html = '';
+
+            for(let i=1; i<=n; i++) {
+                html += `
+                <div class="p-3 border border-orange-200 rounded-lg bg-white relative shadow-sm">
+                    <span class="absolute -left-2 -top-2 bg-orange-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white shadow-sm">${i}</span>
+                    <p class="text-[11px] font-bold text-orange-700 mb-2">Dimensi Broken Space ${i}</p>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div><label class="text-[10px] text-gray-600 font-bold">Panjang (m)</label><input type="number" id="broken-p-${i}" step="0.01" oninput="hitungKalkulasiBroken()" class="w-full p-1.5 border border-gray-300 rounded text-xs bg-gray-50 focus:ring-1 focus:ring-orange-500"></div>
+                        <div><label class="text-[10px] text-gray-600 font-bold">Lebar (m)</label><input type="number" id="broken-l-${i}" step="0.01" oninput="hitungKalkulasiBroken()" class="w-full p-1.5 border border-gray-300 rounded text-xs bg-gray-50 focus:ring-1 focus:ring-orange-500"></div>
+                        <div><label class="text-[10px] text-gray-600 font-bold">Tinggi (m)</label><input type="number" id="broken-t-${i}" step="0.01" oninput="hitungKalkulasiBroken()" class="w-full p-1.5 border border-gray-300 rounded text-xs bg-gray-50 focus:ring-1 focus:ring-orange-500"></div>
+                    </div>
+                </div>`;
+            }
+            container.innerHTML = html;
+            hitungKalkulasiBroken();
+        }
+
+        function hitungKalkulasiBroken() {
+            let n = parseInt(document.getElementById('input-jml-broken').value) || 0;
+            let totalBroken = 0;
+            for(let i=1; i<=n; i++) {
+                let p = parseFloat(document.getElementById(`broken-p-${i}`)?.value) || 0;
+                let l = parseFloat(document.getElementById(`broken-l-${i}`)?.value) || 0;
+                let t = parseFloat(document.getElementById(`broken-t-${i}`)?.value) || 0;
+                totalBroken += (p * l * t * 0.7);
+            }
+            let brokenInput = document.getElementById('input-broken-space');
+            if(brokenInput) {
+                // Baris di bawah ini sudah diperbaiki menggunakan Math.round()
+                brokenInput.value = totalBroken > 0 ? Math.round(totalBroken) : ""; 
+            }
+            hitungKalkulasi(); // Panggil kalkulasi utama
+        }
+
+        // MULTISELECT FUMIGAN
+        function onFumiganChange() {
+            let checks = document.querySelectorAll('.fumi-chk:checked');
+            let container = document.getElementById('fumigan-lokasi-container');
+            if(checks.length > 1) {
+                let html = '<p class="text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-1 rounded mt-2 mb-1">Total Butir Obat Fumigan</p>';
+                checks.forEach(c => {
+                    html += `<div class="flex justify-between items-center mt-1 bg-white p-1.5 rounded border border-amber-100"><label class="text-xs font-semibold text-gray-700 truncate mr-2">${c.value}</label><input type="number" id="jml-fumi-${c.value.replace(/\s+/g,'-')}" placeholder="Cth: 50" class="p-1 border border-gray-300 rounded w-20 text-xs text-center focus:ring-1 focus:ring-amber-500" required></div>`;
+                });
+                container.innerHTML = html;
+            } else { container.innerHTML = ''; }
+        }
+
+        // MULTISELECT INSEKTISIDA (Munculkan input liter jika > 1)
+        function onInsekChange() {
+            let checks = document.querySelectorAll('.insek-chk:checked');
+            let container = document.getElementById('insektisida-lokasi-container');
+            if(checks.length > 1) {
+                let html = '<p class="text-[11px] font-bold text-blue-800 bg-blue-100 px-2 py-1 rounded mt-2 mb-1">Total Penggunaan (Liter)</p>';
+                checks.forEach(c => {
+                    html += `<div class="flex justify-between items-center mt-1 bg-white p-1.5 rounded border border-blue-100"><label class="text-xs font-semibold text-gray-700 truncate mr-2">${c.value}</label><input type="number" step="0.01" id="jml-insek-${c.value.replace(/\s+/g,'-')}" placeholder="Cth: 1.5" class="p-1 border border-gray-300 rounded w-20 text-xs text-center focus:ring-1 focus:ring-blue-500" required></div>`;
+                });
+                container.innerHTML = html;
+            } else { container.innerHTML = ''; }
+        }
+
+        function parseGudangVal(val, defaultVal = 0) {
+            if (val === undefined || val === null || val === "") return defaultVal;
+            let num = parseFloat(val);
+            if (!isNaN(num) && num > 0) return num;
+            if (typeof val === 'string') {
+                try {
+                    let clean = val.replace(/x/gi, '*');
+                    if (/^[0-9\.\+\-\*\/\(\)\s]+$/.test(clean)) {
+                        let res = Function('"use strict"; return (' + clean + ')')();
+                        if (!isNaN(res) && res > 0) return res;
+                    }
+                } catch(e) {}
+            }
+            return defaultVal;
+        }
+
+        // ==================== 4. KALKULASI GUDANG REALTIME ====================
+        function hitungKalkulasi() {
+            let komper = document.getElementById('input-komper').value; 
+            let unit = document.getElementById('input-unit').value;
+            let gudang = DB_GUDANG.find(g => g.Gudang === komper && g.Unit === unit);
+            
+            let totalTonase = 0;
+            document.querySelectorAll('.stapel-val-input').forEach(inp => { totalTonase += parseFloat(inp.value) || 0; });
+            document.getElementById('display-total-tonase').innerText = totalTonase;
+            
+            if(!gudang) return;
+
+            let broken = parseFloat(document.getElementById('input-broken-space').value) || 0;
+            let totalBerat = totalTonase + broken;
+
+            let panjang = parseGudangVal(gudang.Panjang, 0);
+            let lebar = parseGudangVal(gudang.Lebar, 0);
+            let tinggi = parseGudangVal(gudang.Tinggi, 0);
+
+            let p_sp = parseGudangVal(gudang.P_SP, parseGudangVal(gudang.Panjang_SP, 2)); 
+            let l_sp = parseGudangVal(gudang.L_SP, parseGudangVal(gudang.Lebar_SP, 2));
+            let tot_t = parseGudangVal(gudang.Tot_T, parseGudangVal(gudang.Total_Teras, 0));
+
+            let dP = panjang * tinggi * p_sp;
+            let dL = lebar * tinggi * l_sp;
+            let al = panjang * lebar * 2;
+            let tr = tot_t * 1;
+            let permStapel = (totalTonase / 150) * 174;
+            
+            let luasAwal = dP + dL + al + tr + permStapel;
+            let lantaiNon = totalTonase / 3.1;
+            let sasaranAkhir = luasAwal - lantaiNon;
+
+            let dFumi = totalBerat * 2;
+            let dInsek = Math.max(0, sasaranAkhir) * 0.25 / 1000;
+
+            const setTxt = (id, val) => { if(document.getElementById(id)) document.getElementById(id).innerText = val; };
+            setTxt('calc-memanjang', dP.toFixed(0) + " m²"); 
+            setTxt('calc-melebar', dL.toFixed(0) + " m²");
+            setTxt('calc-atap', al.toFixed(0) + " m²"); 
+            setTxt('calc-teras', tr.toFixed(0) + " m²");
+            setTxt('calc-stapel', permStapel.toFixed(0) + " m²"); 
+            setTxt('calc-awal', luasAwal.toFixed(0) + " m²");
+            setTxt('calc-lantai', "-" + lantaiNon.toFixed(0) + " m²"); 
+            setTxt('calc-akhir', Math.max(0, sasaranAkhir).toFixed(0) + " m²");
+            setTxt('calc-insek', dInsek.toFixed(1) + " L"); 
+            setTxt('calc-fumi', Math.round(dFumi) + " Btr");
+        }
+
+        // ==================== 5. SUBMIT KEGIATAN (PETUGAS) ====================
+        async function submitKegiatan(e) {
+            e.preventDefault(); 
+            showLoader(currentEditRowId ? "Menyimpan Perubahan..." : "Mengirim Laporan...");
+            
+            try {
+                let komoditasArr = [];
+                document.querySelectorAll('.komo-chk:checked').forEach(c => komoditasArr.push(c.value));
+                
+                let n = parseInt(document.getElementById('input-jml-stapel').value) || 0;
+                let detailStapel = [];
+                for(let i=1; i<=n; i++) {
+                    detailStapel.push({ 
+                        no: i, 
+                        tonase: document.getElementById(`stapel-tonase-${i}`)?.value || 0, 
+                        komoditas: document.getElementById(`stapel-komoditas-${i}`)?.value || "-"
+                    });
+                }
+
+                let fumiArr = []; let detailFumi = [];
+                document.querySelectorAll('.fumi-chk:checked').forEach(c => {
+                    fumiArr.push(c.value);
+                    let loc = document.getElementById(`jml-fumi-${c.value.replace(/\s+/g,'-')}`);
+                    if(loc) {
+                        detailFumi.push({ nama: c.value, jumlah_butir: loc.value + " Butir" });
+                    } else {
+                        detailFumi.push({ nama: c.value, jumlah_butir: "Sesuai Kalkulasi Auto" }); 
+                    }
+                });
+
+                // Ekstrak data multiselect Insektisida
+                let insekArr = []; let detailInsek = [];
+                document.querySelectorAll('.insek-chk:checked').forEach(c => {
+                    insekArr.push(c.value);
+                    let loc = document.getElementById(`jml-insek-${c.value.replace(/\s+/g,'-')}`);
+                    if(loc) {
+                        detailInsek.push({ nama: c.value, jumlah: loc.value + " L" });
+                    } else {
+                        detailInsek.push({ nama: c.value, jumlah: "Sesuai Kalkulasi Auto" }); 
+                    }
+                });
+
+                let nBroken = parseInt(document.getElementById('input-jml-broken')?.value) || 0;
+                let detailBroken = [];
+                for(let i=1; i<=nBroken; i++) {
+                    detailBroken.push({
+                        no: i,
+                        p: document.getElementById(`broken-p-${i}`)?.value || 0,
+                        l: document.getElementById(`broken-l-${i}`)?.value || 0,
+                        t: document.getElementById(`broken-t-${i}`)?.value || 0
+                    });
+                }
+
+                // Ekstrak data hama (Bisa multiple)
+                let hamaArr = [];
+                document.querySelectorAll('.hama-chk:checked').forEach(c => hamaArr.push(c.value));
+                let hamaStr = hamaArr.join(", ");
+
+                let calcObj = { 
+                    luas_sasaran: document.getElementById('calc-akhir').innerText, 
+                    dosis_fumi: document.getElementById('calc-fumi').innerText, 
+                    dosis_insek: document.getElementById('calc-insek').innerText,
+                    jml_broken: nBroken,
+                    detail_broken: detailBroken,
+                    detail_insek: detailInsek,
+                    memanjang: document.getElementById('calc-memanjang').innerText,
+                    melebar: document.getElementById('calc-melebar').innerText,
+                    atap: document.getElementById('calc-atap').innerText,
+                    teras: document.getElementById('calc-teras').innerText,
+                    awal: document.getElementById('calc-awal').innerText,
+                    lantai: document.getElementById('calc-lantai').innerText
+                };
+                
+                let tglGabungan = document.getElementById('input-tgl-mulai').value + " s/d " + document.getElementById('input-tgl-selesai').value;
+
+                const actionType = currentEditRowId ? "editAktivitasFull" : "addAktivitas";
+                const payload = {
+                    action: actionType, 
+                    rowId: currentEditRowId, 
+                    data: {
+                        petugas: currentUser, 
+                        komper: document.getElementById('input-komper').value, 
+                        unit: document.getElementById('input-unit').value,
+                        nomorSpk: document.getElementById('auto-spk').value, 
+                        jenis: document.getElementById('input-kegiatan').value,
+                        ukuranP: document.getElementById('info-gudang-p').innerText,
+                        ukuranL: document.getElementById('info-gudang-l').innerText,
+                        ukuranT: document.getElementById('info-gudang-t').innerText,
+                        tanggal: tglGabungan, 
+                        totalTonaseKomoditas: document.getElementById('display-total-tonase').innerText, 
+                        brokenSpace: document.getElementById('input-broken-space').value || 0,
+                        jmlStapel: n, 
+                        detailStapelJSON: JSON.stringify(detailStapel),
+                        insektisida: insekArr.join(", "),
+                        fumigan: fumiArr.join(", "), 
+                        detailFumiganJSON: JSON.stringify(detailFumi), 
+                        hama: hamaStr,
+                        tingkatSerangan: document.getElementById('input-tingkat-serangan').value, 
+                        jmlPlastik: document.getElementById('input-jml-plastik').value || 0,
+                        kalkulasiJSON: JSON.stringify(calcObj),
+                        keterangan: (document.getElementById('input-keterangan') ? document.getElementById('input-keterangan').value : "")
+                    }
+                };
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+                await syncDatabase(); 
+                currentEditRowId = null; 
+                goBack();
+            }
+            catch (err) {
+                hideLoader();
+                showDialog('Gagal Menyimpan', 'Terjadi kesalahan sistem: ' + err.message);
+                console.error("Error Submit Kegiatan: ", err);
+            }
+        } 
+
+        //================AUTO EDIT FORM autofilledit===========
+        function openEditFull(rowId) {
+            const a = aktivitas_list.find(x => x.rowId === rowId);
+            if(!a) return;
+            
+            currentEditRowId = rowId;
+            document.querySelector('#form-kegiatan-screen h2').innerText = "Edit Laporan Kegiatan";
+            
+            const selK = document.getElementById('input-komper');
+            selK.innerHTML = `<option value="${a.Komper}">${a.Komper}</option>`;
+            selK.value = a.Komper;
+            
+            const selU = document.getElementById('input-unit');
+            selU.disabled = false;
+            selU.innerHTML = `<option value="${a.Unit}">${a.Unit}</option>`;
+            selU.value = a.Unit;
+            
+            document.getElementById('auto-spk').value = a.Nomor_SPK;
+            document.getElementById('input-kegiatan').value = a.Jenis;
+            
+            document.getElementById('dynamic-inputs-container').classList.remove('hidden');
+            const gudangData = DB_GUDANG.find(g => g.Gudang === a.Komper && g.Unit === a.Unit);
+            if(gudangData) {
+                document.getElementById('info-gudang-p').innerText = gudangData.Panjang || 0;
+                document.getElementById('info-gudang-l').innerText = gudangData.Lebar || 0;
+                document.getElementById('info-gudang-t').innerText = gudangData.Tinggi || 0;
+            }
+            
+            if (a.Tgl_Pelaksanaan) {
+                let tgls = a.Tgl_Pelaksanaan.split(' s/d ');
+                document.getElementById('input-tgl-mulai').value = tgls[0] || '';
+                document.getElementById('input-tgl-selesai').value = tgls[1] || '';
+            }
+            
+            document.querySelectorAll('.komo-chk').forEach(chk => chk.checked = false); 
+            document.getElementById('input-jml-stapel').value = a.Jml_Stapel;
+            renderStapelForms(); 
+
+            try {
+                let detailStapel = JSON.parse(a.Detail_Stapel_JSON);
+                detailStapel.forEach(st => {
+                    let i = st.no;
+                    if(document.getElementById(`stapel-tonase-${i}`)) {
+                        document.getElementById(`stapel-tonase-${i}`).value = st.tonase;
+                        document.getElementById(`stapel-komoditas-${i}`).value = st.komoditas;
+                                            
+                        let chk = document.querySelector(`.komo-chk[value="${st.komoditas}"]`);
+                        if(chk) chk.checked = true;
+                    }
+                });
+            } catch(e) {}
+            
+            document.getElementById('input-broken-space').value = a.Broken_Space;
+            
+            try {
+                let kalkulasi = JSON.parse(a.Hasil_Kalkulasi_JSON);
+                if (kalkulasi.jml_broken !== undefined) {
+                    document.getElementById('input-jml-broken').value = kalkulasi.jml_broken;
+                    renderBrokenForms(); 
+                    
+                    if (kalkulasi.detail_broken) {
+                        kalkulasi.detail_broken.forEach(br => {
+                            let i = br.no;
+                            if(document.getElementById(`broken-p-${i}`)) {
+                                document.getElementById(`broken-p-${i}`).value = br.p;
+                                document.getElementById(`broken-l-${i}`).value = br.l;
+                                document.getElementById(`broken-t-${i}`).value = br.t;
+                            }
+                        });
+                    }
+                    hitungKalkulasiBroken();
+                }
+            } catch(e) {}
+            
+            // Reload Multiselect Insektisida
+            document.querySelectorAll('.insek-chk').forEach(chk => chk.checked = false);
+            let savedInsek = (a.Insektisida || "").split(', ');
+            savedInsek.forEach(f => {
+                let chk = document.querySelector(`.insek-chk[value="${f}"]`);
+                if(chk) chk.checked = true;
+            });
+            onInsekChange(); // Munculkan kolom input liter jika >1
+            
+            try {
+                let kalkulasi = JSON.parse(a.Hasil_Kalkulasi_JSON);
+                if (kalkulasi.detail_insek) {
+                    kalkulasi.detail_insek.forEach(di => {
+                        let inputLoc = document.getElementById(`jml-insek-${di.nama.replace(/\s+/g,'-')}`);
+                        if(inputLoc) inputLoc.value = parseFloat(di.jumlah) || 0;
+                    });
+                }
+            } catch(e) {}
+            
+            const fumiInputs = document.getElementById('fumigasi-inputs');
+            const calcBoxFumi = document.getElementById('calc-box-fumi');
+            
+            if(a.Jenis.toLowerCase().includes('fumigasi')) {
+                fumiInputs.classList.remove('hidden');
+                calcBoxFumi.classList.remove('hidden'); calcBoxFumi.classList.add('flex');
+                
+                document.querySelectorAll('.fumi-chk').forEach(chk => chk.checked = false);
+                let fumiArr = (a.Fumigan_Terpilih || "").split(', ');
+                fumiArr.forEach(f => {
+                    let chk = document.querySelector(`.fumi-chk[value="${f}"]`);
+                    if(chk) chk.checked = true;
+                });
+                onFumiganChange(); 
+                
+                try {
+                    let detailFumi = JSON.parse(a.Detail_Alokasi_Fumigan_JSON);
+                    detailFumi.forEach(df => {
+                        let inputLoc = document.getElementById(`jml-fumi-${df.nama.replace(/\s+/g,'-')}`);
+                        if(inputLoc) inputLoc.value = parseInt(df.jumlah_butir) || 0;
+                    });
+                } catch(e) {}
+                
+                // Centang ulang Hama yang tersimpan
+                document.querySelectorAll('.hama-chk').forEach(chk => chk.checked = false);
+                let savedHama = (a.Hama || "").split(', ');
+                savedHama.forEach(h => {
+                    let chk = document.querySelector(`.hama-chk[value="${h}"]`);
+                    if(chk) chk.checked = true;
+                });
+                
+                document.getElementById('input-tingkat-serangan').value = a.Tingkat_Serangan;
+                document.getElementById('input-jml-plastik').value = a.Jml_Plastik;
+            } else {
+                fumiInputs.classList.add('hidden');
+                calcBoxFumi.classList.add('hidden'); calcBoxFumi.classList.remove('flex');
+            }
+            
+            if(document.getElementById('input-keterangan')) {
+                document.getElementById('input-keterangan').value = a.Keterangan || "";
+            }
+            
+            hitungKalkulasi();
+            
+            document.getElementById('detail-laporan-screen').classList.add('hidden');
+            document.getElementById('detail-laporan-screen').classList.remove('flex');
+            showScreen('form-kegiatan-screen');
+        }
+
+        // ==================== 6. VIEWS & ADMIN GENERATE ====================
+        function renderAktivitasView() {
+            const cAdmin = document.getElementById('admin-aktivitas-list'); 
+            const cPetugas = document.getElementById('petugas-history-list');
+            cAdmin.innerHTML = ""; cPetugas.innerHTML = "";
+            
+            aktivitas_list.forEach(a => {
+                cAdmin.innerHTML += `
+                    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+                        <div class="flex justify-between items-start border-b pb-3 mb-3">
+                            <div><p class="font-black text-gray-800 text-lg">${a.Nomor_SPK}</p><p class="text-sm font-bold text-blue-600">${a.Petugas.toUpperCase()} - ${a.Jenis}</p></div>
+                            <span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1.5 rounded-full">SELESAI</span>
+                        </div>
+                        <div class="text-sm text-gray-600 space-y-1 mb-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                            <p><b>Lokasi:</b> ${a.Komper} ${a.Unit}</p>
+                            <p><b>Tanggal:</b> ${a.Tgl_Pelaksanaan}</p>
+                            <p><b>Total Tonase:</b> ${a.Total_Tonase_Komoditas} Ton</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="bukaDetailLaporan(${a.rowId})" class="bg-blue-100 text-blue-700 border border-blue-200 px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-200 transition"><i class="fa-solid fa-eye"></i></button>
+                            <button onclick="openEditFull(${a.rowId})" class="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-50 transition"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="konfirmasiDelete(${a.rowId})" class="bg-red-100 text-red-700 border border-red-200 px-4 py-2 rounded-xl text-sm font-bold hover:bg-red-200 transition"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>`;
+                    
+                if(a.Petugas.toLowerCase() === currentUser.toLowerCase()) {
+                    cPetugas.innerHTML += `
+                    <div onclick="bukaDetailLaporan(${a.rowId})" class="bg-white p-4 rounded-xl border border-gray-200 flex items-center justify-between shadow-sm cursor-pointer hover:bg-blue-50 transition-colors mb-3">
+                        <div class="flex flex-col">
+                            <span class="font-bold text-gray-800">${a.Nomor_SPK}</span>
+                            <span class="text-xs font-medium text-gray-500">${a.Komper} - ${a.Unit}</span>
+                            <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full w-max mt-1">${a.Jenis}</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-400"></i>
+                    </div>`;
+                }
+            });
+        }
+
+        function renderSPKView() {
+            const container = document.getElementById('admin-spk-list'); container.innerHTML = "";
+            spk_list.forEach(spk => {
+                const c = spk.Status === 'Sudah Dikerjakan' ? 'bg-green-100 text-green-700 border-l-green-500' : 'bg-amber-100 text-amber-700 border-l-amber-500';
+                container.innerHTML += `<div class="bg-white p-4 rounded-xl border border-l-4 ${c} shadow-sm flex justify-between items-center"><div class="pr-2"><p class="font-bold text-gray-800 text-base">${spk.Nomor_SPK}</p><p class="text-xs font-medium text-gray-500 mt-1">${spk.Komper} - ${spk.Unit_Gudang}</p><p class="text-[10px] text-gray-400 mt-1"><i class="fa-regular fa-calendar mr-1"></i>${spk.Tanggal}</p></div><span class="text-[10px] font-bold px-2 py-1 rounded-full text-center whitespace-nowrap ${c.split(' ')[0]} ${c.split(' ')[1]}">${spk.Status}</span></div>`;
+            });
+        }
+
+        //============BAGIAN VIEW AKTIVITAS PETUGAS DI DASHBOARD PETUGAS==============
+        function bukaDetailLaporan(rowId) {
+            const a = aktivitas_list.find(x => x.rowId === rowId);
+            if(!a) return;
+
+            document.getElementById('det-spk').innerText = a.Nomor_SPK;
+            document.getElementById('det-kegiatan').innerText = a.Jenis;
+            document.getElementById('det-waktu').innerText = a.Tgl_Pelaksanaan;
+            document.getElementById('det-lokasi').innerText = `${a.Komper} - ${a.Unit}`;
+
+            let gudang = DB_GUDANG.find(g => g.Gudang === a.Komper && g.Unit === a.Unit);
+            if(gudang) {
+                document.getElementById('det-ukuran').innerText = `P: ${gudang.Panjang}m | L: ${gudang.Lebar}m | T: ${gudang.Tinggi}m`;
+                let panjang = parseGudangVal(gudang.Panjang, 0);
+                let lebar = parseGudangVal(gudang.Lebar, 0);
+                let tinggi = parseGudangVal(gudang.Tinggi, 0);
+                let p_sp = parseGudangVal(gudang.P_SP, parseGudangVal(gudang.Panjang_SP, 2)); 
+                let l_sp = parseGudangVal(gudang.L_SP, parseGudangVal(gudang.Lebar_SP, 2));
+                let tot_t = parseGudangVal(gudang.Tot_T, parseGudangVal(gudang.Total_Teras, 0));
+                
+                document.getElementById('det-calc-p').innerText = (panjang * tinggi * p_sp).toFixed(1) + " m2";
+                document.getElementById('det-calc-l').innerText = (lebar * tinggi * l_sp).toFixed(1) + " m2";
+                document.getElementById('det-calc-a').innerText = (panjang * lebar * 2).toFixed(1) + " m2";
+                document.getElementById('det-calc-t').innerText = (tot_t * 1).toFixed(1) + " m2";
+            } else {
+                document.getElementById('det-ukuran').innerText = "-";
+            }
+
+            document.getElementById('det-tonase').innerText = `${a.Total_Tonase_Komoditas} Ton`;
+            document.getElementById('det-stapel').innerText = `${a.Jml_Stapel} Stapel`;
+            document.getElementById('det-broken').innerText = `${a.Broken_Space} Ton`;
+
+            let listKomoditas = new Set();
+            try {
+                let stapelData = JSON.parse(a.Detail_Stapel_JSON);
+                stapelData.forEach(st => listKomoditas.add(st.komoditas));
+            } catch(e) {}
+            document.getElementById('det-komoditas').innerText = Array.from(listKomoditas).join(", ") || "-";
+
+            document.getElementById('det-insek').innerText = a.Insektisida || "-";
+            
+            let kalkulasi = {};
+            try { kalkulasi = JSON.parse(a.Hasil_Kalkulasi_JSON); } catch(e) {}
+            document.getElementById('det-total-insek').innerText = kalkulasi.dosis_insek || "-";
+
+            const fumiBox = document.getElementById('det-fumi-box');
+            if (a.Jenis.toLowerCase().includes('fumigasi')) {
+                fumiBox.classList.remove('hidden');
+                document.getElementById('det-fumi-jenis').innerText = a.Fumigan_Terpilih;
+                document.getElementById('det-total-fumi').innerText = kalkulasi.dosis_fumi || "-";
+                document.getElementById('det-hama').innerText = a.Hama || "-";
+                document.getElementById('det-serangan').innerText = a.Tingkat_Serangan || "-";
+                document.getElementById('det-plastik').innerText = a.Jml_Plastik || "0";
+            } else {
+                fumiBox.classList.add('hidden');
+            }
+
+  
+            // --- LOGIKA TOMBOL EDIT & DOWNLOAD PDF ---
+            const btnEditDetail = document.getElementById('btn-edit-petugas');
+            const btnDownload = document.getElementById('btn-download-pdf');
+            
+            // 1. Cek Tombol Download PDF Final
+            if (a.Link_PDF_Final && a.Link_PDF_Final !== "") {
+                btnDownload.classList.remove('hidden'); // Munculkan tombol download
+                btnDownload.onclick = function() { window.open(a.Link_PDF_Final, '_blank'); };
+                
+                // Jika BA sudah Final, Petugas TIDAK BOLEH edit data lagi
+                btnEditDetail.classList.add('hidden'); 
+            } else {
+                btnDownload.classList.add('hidden'); // Sembunyikan tombol download
+                
+                // Jika belum ada PDF, Petugas boleh edit (Admin tidak boleh)
+                if (currentRole.toLowerCase() === 'admin') {
+                    btnEditDetail.classList.add('hidden');
+                } else {
+                    btnEditDetail.classList.remove('hidden');
+                    btnEditDetail.onclick = function() { openEditFull(a.rowId); };
+                }
+            }
+
+            showScreen('detail-laporan-screen');
+        }
+
+        // FUNGSI UNTUK MENGHAPUS AKTIVITAS (KHUSUS ADMIN)
+        let deleteTargetRow = null;
+        function konfirmasiDelete(rowId) {
+            deleteTargetRow = rowId;
+            document.getElementById('dialog-title').innerText = "Hapus Laporan"; 
+            document.getElementById('dialog-message').innerText = "Yakin ingin menghapus laporan ini? Data yang dihapus dari sistem tidak dapat dikembalikan.";
+            
+            document.getElementById('dialog-btns').innerHTML = `
+                <div class="flex space-x-3">
+                    <button onclick="closeDialog()" class="flex-1 bg-gray-200 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-300 transition">Batal</button>
+                    <button onclick="eksekusiDelete()" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-700 shadow-md transition">Hapus</button>
+                </div>
+            `;
+            
+            document.getElementById('custom-dialog').classList.remove('hidden'); 
+            document.getElementById('custom-dialog').classList.add('flex');
+        }
+
+        async function eksekusiDelete() {
+            closeDialog();
+            showLoader("Menghapus Data Laporan...");
+            try {
+                const payload = { action: "deleteAktivitas", rowId: deleteTargetRow };
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+                await syncDatabase(); 
+            } catch(err) {
+                showDialog('Error', err.toString());
+            }
+        }
+
+        // ==================== EDIT & GENERATE MODAL LOGIC ====================
+        function openEdit(id, tgl, tonase, broken) {
+            document.getElementById('edit-row-id').value = id;
+            document.getElementById('edit-tgl').value = tgl;
+            document.getElementById('edit-tonase').value = tonase;
+            document.getElementById('edit-broken').value = broken;
+            const m = document.getElementById('modal-edit'); m.classList.remove('hidden'); m.classList.add('flex');
+            setTimeout(()=> { m.querySelector('div').classList.remove('scale-95'); }, 10);
+        }
+        function closeModalEdit() { 
+            const m = document.getElementById('modal-edit'); m.querySelector('div').classList.add('scale-95');
+            setTimeout(()=> { m.classList.add('hidden'); m.classList.remove('flex'); }, 200);
+        }
+        async function saveEdit() {
+            showLoader("Menyimpan Edit..."); closeModalEdit();
+            const pay = { action: 'editAktivitas', rowId: document.getElementById('edit-row-id').value, data: { tanggal: document.getElementById('edit-tgl').value, totalTonase: document.getElementById('edit-tonase').value, brokenSpace: document.getElementById('edit-broken').value }};
+            await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(pay) });
+            await syncDatabase();
+        }
+
+        
+        // ==================== AUTH & UTILS ====================
+        function handleLogin(e) {
+            e.preventDefault(); 
+            const u = document.getElementById('username').value.trim().toLowerCase(); 
+            const p = document.getElementById('password').value;
+            const usr = DB_PEGAWAI.find(x => String(x.Username).toLowerCase() === u && String(x.Password) === p && String(x.Status).trim() === "Aktif");
+            
+            if(usr) {
+                currentRole = String(usr.Role).toLowerCase(); currentUser = usr.Username;
+                document.getElementById(currentRole + '-display-name').textContent = usr.Nama;
+                renderAktivitasView(); showScreen('dashboard-' + currentRole + '-screen');
+            } else { showDialog('Akses Ditolak', 'Username/Password salah atau akun tidak aktif.'); }
+        }
+
+        function showLoader(txt) { document.getElementById('loader-text').innerText = txt; document.getElementById('global-loader').classList.remove('hidden'); document.getElementById('global-loader').classList.add('flex'); }
+        function hideLoader() { document.getElementById('global-loader').classList.add('hidden'); document.getElementById('global-loader').classList.remove('flex'); }
+
+        function promptLogout() { 
+              document.getElementById('dialog-title').innerText = "Konfirmasi Logout"; 
+              document.getElementById('dialog-message').innerText = "Apakah Anda yakin ingin keluar dari aplikasi?";
+              
+              document.getElementById('dialog-btns').innerHTML = `
+                  <div class="flex space-x-3">
+                      <button onclick="closeDialog()" class="flex-1 bg-gray-200 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-300 transition">Batal</button>
+                      <button onclick="executeLogout()" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-700 shadow-md transition">Keluar</button>
+                  </div>
+              `;
+              
+              document.getElementById('custom-dialog').classList.remove('hidden'); 
+              document.getElementById('custom-dialog').classList.add('flex'); 
+          }
+
+        function executeLogout() {
+              closeDialog();
+              document.getElementById('login-form').reset(); 
+              currentRole = ""; 
+              currentUser = ""; 
+              
+              if(document.getElementById('petugas-display-name')) document.getElementById('petugas-display-name').textContent = "Petugas";
+              if(document.getElementById('admin-display-name')) document.getElementById('admin-display-name').textContent = "Admin";
+              
+              // Ganti tumpukan history terakhir dengan halaman login
+              window.history.replaceState({ screen: 'login-screen' }, '', '');
+              showScreen('login-screen', false); 
+          }
+
+          function closeDialog() {
+              document.getElementById('custom-dialog').classList.add('hidden');
+              document.getElementById('custom-dialog').classList.remove('flex');
+          }
+
+          function showDialog(title, msg) {
+              document.getElementById('dialog-title').innerText = title; 
+              document.getElementById('dialog-message').innerText = msg;
+              
+              document.getElementById('dialog-btns').innerHTML = `
+                  <button onclick="closeDialog()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">Mengerti</button>
+              `;
+              
+              document.getElementById('custom-dialog').classList.remove('hidden'); 
+              document.getElementById('custom-dialog').classList.add('flex');
+          }
+
+        function showScreen(screenId, pushHistory = true) {
+            document.querySelectorAll('.screen-view').forEach(el => { 
+                el.classList.add('hidden'); 
+                el.classList.remove('flex'); 
+            });
+            const target = document.getElementById(screenId);
+            if (target) {
+                target.classList.remove('hidden'); 
+                target.classList.add('flex'); 
+                target.scrollTo(0,0);
+                
+                // Tambahkan state ke riwayat browser agar tombol back HP berfungsi
+                if(pushHistory) {
+                    window.history.pushState({ screen: screenId }, '', '');
+                }
+            }
+        }
+
+          function goBack() {
+              // Jika riwayat browser ada, gunakan fungsi back bawaan (sinkron dengan tombol HP)
+              if (window.history.state && window.history.state.screen) {
+                  window.history.back();
+              } else {
+                  // Fallback jika tidak ada riwayat
+                  if (currentRole.toLowerCase() === 'admin') {
+                      showScreen('dashboard-admin-screen');
+                  } else if (currentRole.toLowerCase() === 'petugas') {
+                      showScreen('dashboard-petugas-screen');
+                  } else {
+                      showScreen('login-screen');
+                  }
+              }
+          }
+
+          // ==================== FITUR SHOW/HIDE PASSWORD ====================
+          function togglePassword() {
+              const pwdInput = document.getElementById('password');
+              const eyeIcon = document.getElementById('eye-icon');
+              
+              if (pwdInput.type === 'password') {
+                  pwdInput.type = 'text';
+                  eyeIcon.classList.remove('fa-eye');
+                  eyeIcon.classList.add('fa-eye-slash'); // Mengubah ikon jadi mata dicoret
+              } else {
+                  pwdInput.type = 'password';
+                  eyeIcon.classList.remove('fa-eye-slash');
+                  eyeIcon.classList.add('fa-eye'); // Mengembalikan ikon mata normal
+              }
+          }
+
+
+
+          // ==================== HANDLE TOMBOL BACK HP ====================
+          window.addEventListener('popstate', (event) => {
+              if (event.state && event.state.screen) {
+                  // Jika user berada di Dashboard dan menekan tombol Back HP (mencoba ke Login)
+                  if (event.state.screen === 'login-screen' && currentRole !== "") {
+                      // Paksa maju lagi satu langkah agar tidak terlempar ke login
+                      window.history.forward(); 
+                      // Munculkan popup penawaran logout
+                      promptLogout();
+                  } else {
+                      // Jika di dalam Form, tampilkan halaman sebelumnya secara normal
+                      showScreen(event.state.screen, false);
+                  }
+              }
+          });
+    </script> -->
+
+    <script>
+        // =========================================================================
+        // URL API JEMBATAN KE GOOGLE SHEETS (JANGAN DIUBAH)
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwpFVObQkdalPiIM9991oXruCAhNRlUq85e6BI1LiqJZe_2S-lAk8k6qjzeTNYTYU9Lgw/exec"; 
+        // =========================================================================
+        
+        let DB_PEGAWAI=[], DB_GUDANG=[], DB_KOMODITAS=[], DB_FUMIGAN=[], DB_INSEKTISIDA=[], DB_HAMA=[];
+        let spk_list=[], aktivitas_list=[];
+        let currentEditRowId = null;
+        let currentRole="", currentUser="";
+
+        // ==================== 1. SYNC & INIT DATA ====================
+        window.onload = function() { 
+            syncDatabase(true); 
+            setTimeout(() => { document.getElementById('splash-screen').style.opacity = '0'; setTimeout(() => { document.getElementById('splash-screen').classList.add('hidden'); showScreen('login-screen'); }, 500); }, 1500); 
+        }
+
+        async function syncDatabase(isInitial = false) {
+            if(!isInitial) showLoader("Menyinkronkan Data...");
+            try {
+                const res = await fetch(GAS_URL + "?api=true", { redirect: "follow" });
+                const data = await res.json();
+                if(data.status === "success") {
+                    spk_list = data.spk || []; aktivitas_list = data.aktivitas || [];
+                    DB_PEGAWAI = data.pegawai || []; DB_GUDANG = data.gudang || [];
+                    DB_KOMODITAS = data.komoditas || []; DB_FUMIGAN = data.fumigan || [];
+                    DB_INSEKTISIDA = data.insektisida || []; DB_HAMA = data.hama || [];
+                    
+                    renderSPKView(); 
+                    renderAktivitasView(); 
+                    populateDynamicDropdowns();
+                }
+            } catch (e) { alert("Error koneksi: " + e); }
+            finally { if(!isInitial) hideLoader(); }
+        }
+
+        function populateDynamicDropdowns() {
+            const fillOptions = (id, arr) => {
+                const sel = document.getElementById(id); if(!sel) return;
+                sel.innerHTML = '<option value="">-- Pilih --</option>';
+                arr.forEach(a => sel.add(new Option(Object.values(a)[0], Object.values(a)[0])));
+            };
+            
+            // Komper Admin
+            const selK = document.getElementById('spk-komper');
+            if(selK) {
+                selK.innerHTML = '<option value="">-- Pilih Komper --</option>';
+                [...new Set(DB_GUDANG.map(g=>g.Gudang))].forEach(k => { if(k) selK.add(new Option(k,k)); });
+            }
+
+            // Checklist Insektisida (Multiselect)
+            const insekBox = document.getElementById('insektisida-checkboxes');
+            if(insekBox) {
+                insekBox.innerHTML = '';
+                DB_INSEKTISIDA.forEach(f => {
+                    let nama = Object.values(f)[0];
+                    if(nama) {
+                        insekBox.innerHTML += `<label class="flex items-center space-x-2"><input type="checkbox" value="${nama}" class="insek-chk w-4 h-4 text-blue-600 rounded" onchange="onInsekChange()"><span class="text-xs text-gray-700">${nama}</span></label>`;
+                    }
+                });
+            }
+
+            // Checklist Hama (Bisa lebih dari 1)
+            const hamaBox = document.getElementById('hama-checkboxes');
+            if(hamaBox) {
+                hamaBox.innerHTML = '';
+                DB_HAMA.forEach(h => {
+                    let nama = Object.values(h)[0];
+                    if(nama) {
+                        hamaBox.innerHTML += `<label class="flex items-center space-x-2"><input type="checkbox" value="${nama}" class="hama-chk w-4 h-4 text-blue-600 rounded"><span class="text-xs text-gray-700 truncate">${nama}</span></label>`;
+                    }
+                });
+            }
+            
+            // Checklist Komoditas 
+            const komContainer = document.getElementById('komoditas-checkboxes-container');
+            if(komContainer) {
+                komContainer.innerHTML = '';
+                DB_KOMODITAS.forEach(k => {
+                    let nama = Object.values(k)[0];
+                    if(nama) {
+                        komContainer.innerHTML += `<label class="flex items-center space-x-2 text-sm bg-white p-2 rounded border border-gray-100 shadow-sm"><input type="checkbox" value="${nama}" class="komo-chk w-4 h-4 text-blue-600 rounded"><span>${nama}</span></label>`;
+                    }
+                });
+            }
+
+            // Multiselect Fumigan
+            const fumiBox = document.getElementById('fumigan-checkboxes');
+            if(fumiBox) {
+                fumiBox.innerHTML = '';
+                DB_FUMIGAN.forEach(f => {
+                    let nama = Object.values(f)[0];
+                    if(nama) {
+                        fumiBox.innerHTML += `<label class="flex items-center space-x-2"><input type="checkbox" value="${nama}" class="fumi-chk w-4 h-4 text-amber-600 rounded" onchange="onFumiganChange()"><span class="text-xs text-gray-700">${nama}</span></label>`;
+                    }
+                });
+            }
+        }
+
+        // ==================== 2. LOGIC ADMIN ====================
+        function updateAdminUnitDropdown() {
+            const k = document.getElementById('spk-komper').value;
+            const sel = document.getElementById('spk-unit'); 
+            sel.innerHTML = '<option value="">-- Pilih Unit --</option>';
+            if(k) { 
+                sel.disabled = false; 
+                DB_GUDANG.filter(g=>g.Gudang===k).forEach(g=>{ if(g.Unit) sel.add(new Option(g.Unit, g.Unit)) }); 
+            } else { sel.disabled = true; }
+        }
+
+        async function submitSPK(e) {
+            e.preventDefault(); showLoader("Menyimpan SPK...");
+            const payload = {
+                action: "addSPK", data: {
+                    tanggal: document.getElementById('spk-tanggal').value, 
+                    komper: document.getElementById('spk-komper').value,
+                    unit: document.getElementById('spk-unit').value, 
+                    nomor: document.getElementById('spk-nomor').value.toUpperCase(),
+                    jenis: document.getElementById('spk-jenis').value
+                }
+            };
+            await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+            await syncDatabase(); goBack(); e.target.reset();
+        }
+
+        // ==================== 3. LOGIC PETUGAS (DINAMIS & STAPEL) ====================
+        function openFormKegiatanPetugas() {
+            currentEditRowId = null; // Penanda mode Input Baru
+            document.querySelector('#form-kegiatan-screen h2').innerText = "Input Kegiatan"; // Reset Judul Form
+            
+            const selK = document.getElementById('input-komper'); 
+            selK.innerHTML = '<option value="">-- Pilih Komper --</option>';
+            
+            const actives = [...new Set(spk_list.filter(s=>s.Status==="Belum Dikerjakan").map(s=>s.Komper))];
+            if(actives.length===0) { showDialog('Tugas Kosong', 'Tidak ada SPK aktif saat ini.'); return; }
+            actives.forEach(a => selK.add(new Option(a,a)));
+            
+            document.getElementById('input-unit').disabled = true; 
+            document.getElementById('dynamic-inputs-container').classList.add('hidden');
+            document.getElementById('stapel-forms-container').innerHTML = ''; 
+            document.getElementById('display-total-tonase').innerText = '0';
+            
+            // Reset input broken space
+            if(document.getElementById('input-jml-broken')) document.getElementById('input-jml-broken').value = 0;
+            if(document.getElementById('broken-forms-container')) document.getElementById('broken-forms-container').innerHTML = '';
+            if(document.getElementById('input-broken-space')) document.getElementById('input-broken-space').value = '';
+            
+            // Reset checklist hama
+            document.querySelectorAll('.hama-chk').forEach(chk => chk.checked = false);
+
+            // Reset Insektisida
+            document.querySelectorAll('.insek-chk').forEach(chk => chk.checked = false);
+            if(document.getElementById('insektisida-lokasi-container')) document.getElementById('insektisida-lokasi-container').innerHTML = '';
+
+            showScreen('form-kegiatan-screen');
+        }
+
+        function updatePetugasUnitDropdown() {
+            const k = document.getElementById('input-komper').value;
+            const sel = document.getElementById('input-unit'); 
+            sel.innerHTML = '<option value="">-- Pilih Unit --</option>';
+            if(k) {
+                sel.disabled = false; 
+                spk_list.filter(s=>s.Komper===k && s.Status==="Belum Dikerjakan").forEach(s=>sel.add(new Option(s.Unit_Gudang, s.Unit_Gudang)));
+            } else { sel.disabled = true; }
+            onPetugasSPKSelected();
+        }
+
+        function onPetugasSPKSelected() {
+            const k = document.getElementById('input-komper').value;
+            const u = document.getElementById('input-unit').value;
+            const spk = spk_list.find(s=>s.Komper===k && s.Unit_Gudang===u && s.Status==="Belum Dikerjakan");
+                        
+            if(spk) {
+                document.getElementById('auto-spk').value = spk.Nomor_SPK; 
+                document.getElementById('input-kegiatan').value = spk.Jenis;
+                document.getElementById('dynamic-inputs-container').classList.remove('hidden');
+                
+                const gudangData = DB_GUDANG.find(g => g.Gudang === k && g.Unit === u);
+                if(gudangData) {
+                    document.getElementById('info-gudang-p').innerText = gudangData.Panjang || 0;
+                    document.getElementById('info-gudang-l').innerText = gudangData.Lebar || 0;
+                    document.getElementById('info-gudang-t').innerText = gudangData.Tinggi || 0;
+                } else {
+                    document.getElementById('info-gudang-p').innerText = "-";
+                    document.getElementById('info-gudang-l').innerText = "-";
+                    document.getElementById('info-gudang-t').innerText = "-";
+                }
+                                                
+                const fumiInputs = document.getElementById('fumigasi-inputs');
+                const calcBoxFumi = document.getElementById('calc-box-fumi');
+                
+                if(spk.Jenis.toLowerCase().includes('fumigasi')) { 
+                    fumiInputs.classList.remove('hidden'); 
+                    calcBoxFumi.classList.remove('hidden'); calcBoxFumi.classList.add('flex'); 
+                } else { 
+                    fumiInputs.classList.add('hidden'); 
+                    calcBoxFumi.classList.add('hidden'); calcBoxFumi.classList.remove('flex');
+                }
+                hitungKalkulasi();
+            } else {
+                document.getElementById('dynamic-inputs-container').classList.add('hidden');
+            }
+        }
+
+        function renderStapelForms() {
+            let n = parseInt(document.getElementById('input-jml-stapel').value) || 0;
+            if (n > 20) { n = 20; document.getElementById('input-jml-stapel').value = 20; }
+            if (n < 0) { n = 0; document.getElementById('input-jml-stapel').value = 0; }
+            
+            let container = document.getElementById('stapel-forms-container');
+            let html = '';
+            
+            let komOpts = '<option value="">Pilih Komoditas</option>';
+            DB_KOMODITAS.forEach(k => { let nama = Object.values(k)[0]; if(nama) komOpts += `<option value="${nama}">${nama}</option>`; });
+
+            for(let i=1; i<=n; i++) {
+                html += `
+                <div class="p-3 border border-blue-100 rounded-lg bg-white shadow-sm mb-2 relative">
+                    <span class="absolute -left-2 -top-2 bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-2 border-white shadow-sm">${i}</span>
+                    <div class="grid grid-cols-2 gap-2 mt-1">
+                        <div><label class="text-[10px] text-gray-500 font-bold">Tonase Stapel (Ton)</label><input type="number" id="stapel-tonase-${i}" step="0.01" oninput="hitungKalkulasi()" class="stapel-val-input w-full p-2 border rounded-md text-sm bg-gray-50 focus:ring-1 focus:ring-blue-500"></div>
+                        <div><label class="text-[10px] text-gray-500 font-bold">Komoditas</label><select id="stapel-komoditas-${i}" class="w-full p-2 border rounded-md text-xs bg-gray-50">${komOpts}</select></div>
+                    </div>
+                </div>`;
+            }
+            container.innerHTML = html;
+            hitungKalkulasi();
+        }
+        
+        function renderBrokenForms() {
+            let n = parseInt(document.getElementById('input-jml-broken').value) || 0;
+            if (n > 10) { n = 10; document.getElementById('input-jml-broken').value = 10; }
+            if (n < 0) { n = 0; document.getElementById('input-jml-broken').value = 0; }
+            
+            let container = document.getElementById('broken-forms-container');
+            let html = '';
+
+            for(let i=1; i<=n; i++) {
+                html += `
+                <div class="p-3 border border-orange-200 rounded-lg bg-white relative shadow-sm">
+                    <span class="absolute -left-2 -top-2 bg-orange-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white shadow-sm">${i}</span>
+                    <p class="text-[11px] font-bold text-orange-700 mb-2">Dimensi Broken Space ${i}</p>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div><label class="text-[10px] text-gray-600 font-bold">Panjang (m)</label><input type="number" id="broken-p-${i}" step="0.01" oninput="hitungKalkulasiBroken()" class="w-full p-1.5 border border-gray-300 rounded text-xs bg-gray-50 focus:ring-1 focus:ring-orange-500"></div>
+                        <div><label class="text-[10px] text-gray-600 font-bold">Lebar (m)</label><input type="number" id="broken-l-${i}" step="0.01" oninput="hitungKalkulasiBroken()" class="w-full p-1.5 border border-gray-300 rounded text-xs bg-gray-50 focus:ring-1 focus:ring-orange-500"></div>
+                        <div><label class="text-[10px] text-gray-600 font-bold">Tinggi (m)</label><input type="number" id="broken-t-${i}" step="0.01" oninput="hitungKalkulasiBroken()" class="w-full p-1.5 border border-gray-300 rounded text-xs bg-gray-50 focus:ring-1 focus:ring-orange-500"></div>
+                    </div>
+                </div>`;
+            }
+            container.innerHTML = html;
+            hitungKalkulasiBroken();
+        }
+
+        function hitungKalkulasiBroken() {
+            let n = parseInt(document.getElementById('input-jml-broken').value) || 0;
+            let totalBroken = 0;
+            for(let i=1; i<=n; i++) {
+                let p = parseFloat(document.getElementById(`broken-p-${i}`)?.value) || 0;
+                let l = parseFloat(document.getElementById(`broken-l-${i}`)?.value) || 0;
+                let t = parseFloat(document.getElementById(`broken-t-${i}`)?.value) || 0;
+                totalBroken += (p * l * t * 0.7);
+            }
+            let brokenInput = document.getElementById('input-broken-space');
+            if(brokenInput) {
+                brokenInput.value = totalBroken > 0 ? Math.round(totalBroken) : ""; 
+            }
+            hitungKalkulasi(); 
+        }
+
+        function onFumiganChange() {
+            let checks = document.querySelectorAll('.fumi-chk:checked');
+            let container = document.getElementById('fumigan-lokasi-container');
+            if(checks.length > 1) {
+                let html = '<p class="text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-1 rounded mt-2 mb-1">Total Butir Obat Fumigan</p>';
+                checks.forEach(c => {
+                    html += `<div class="flex justify-between items-center mt-1 bg-white p-1.5 rounded border border-amber-100"><label class="text-xs font-semibold text-gray-700 truncate mr-2">${c.value}</label><input type="number" id="jml-fumi-${c.value.replace(/\s+/g,'-')}" placeholder="Cth: 50" class="p-1 border border-gray-300 rounded w-20 text-xs text-center focus:ring-1 focus:ring-amber-500" required></div>`;
+                });
+                container.innerHTML = html;
+            } else { container.innerHTML = ''; }
+        }
+
+        function onInsekChange() {
+            let checks = document.querySelectorAll('.insek-chk:checked');
+            let container = document.getElementById('insektisida-lokasi-container');
+            if(checks.length > 1) {
+                let html = '<p class="text-[11px] font-bold text-blue-800 bg-blue-100 px-2 py-1 rounded mt-2 mb-1">Total Penggunaan (Liter)</p>';
+                checks.forEach(c => {
+                    html += `<div class="flex justify-between items-center mt-1 bg-white p-1.5 rounded border border-blue-100"><label class="text-xs font-semibold text-gray-700 truncate mr-2">${c.value}</label><input type="number" step="0.01" id="jml-insek-${c.value.replace(/\s+/g,'-')}" placeholder="Cth: 1.5" class="p-1 border border-gray-300 rounded w-20 text-xs text-center focus:ring-1 focus:ring-blue-500" required></div>`;
+                });
+                container.innerHTML = html;
+            } else { container.innerHTML = ''; }
+        }
+
+        function parseGudangVal(val, defaultVal = 0) {
+            if (val === undefined || val === null || val === "") return defaultVal;
+            let num = parseFloat(val);
+            if (!isNaN(num) && num > 0) return num;
+            if (typeof val === 'string') {
+                try {
+                    let clean = val.replace(/x/gi, '*');
+                    if (/^[0-9\.\+\-\*\/\(\)\s]+$/.test(clean)) {
+                        let res = Function('"use strict"; return (' + clean + ')')();
+                        if (!isNaN(res) && res > 0) return res;
+                    }
+                } catch(e) {}
+            }
+            return defaultVal;
+        }
+
+        // ==================== 4. KALKULASI GUDANG REALTIME ====================
+        function hitungKalkulasi() {
+            let komper = document.getElementById('input-komper').value; 
+            let unit = document.getElementById('input-unit').value;
+            let gudang = DB_GUDANG.find(g => g.Gudang === komper && g.Unit === unit);
+            
+            let totalTonase = 0;
+            document.querySelectorAll('.stapel-val-input').forEach(inp => { totalTonase += parseFloat(inp.value) || 0; });
+            document.getElementById('display-total-tonase').innerText = totalTonase;
+            
+            if(!gudang) return;
+
+            let broken = parseFloat(document.getElementById('input-broken-space').value) || 0;
+            let totalBerat = totalTonase + broken;
+
+            let panjang = parseGudangVal(gudang.Panjang, 0);
+            let lebar = parseGudangVal(gudang.Lebar, 0);
+            let tinggi = parseGudangVal(gudang.Tinggi, 0);
+
+            let p_sp = parseGudangVal(gudang.P_SP, parseGudangVal(gudang.Panjang_SP, 2)); 
+            let l_sp = parseGudangVal(gudang.L_SP, parseGudangVal(gudang.Lebar_SP, 2));
+            let tot_t = parseGudangVal(gudang.Tot_T, parseGudangVal(gudang.Total_Teras, 0));
+
+            let dP = panjang * tinggi * p_sp;
+            let dL = lebar * tinggi * l_sp;
+            let al = panjang * lebar * 2;
+            let tr = tot_t * 1;
+            let permStapel = (totalTonase / 150) * 174;
+            
+            let luasAwal = dP + dL + al + tr + permStapel;
+            let lantaiNon = totalTonase / 3.1;
+            let sasaranAkhir = luasAwal - lantaiNon;
+
+            let dFumi = totalBerat * 2;
+            let dInsek = Math.max(0, sasaranAkhir) * 0.25 / 1000;
+
+            const setTxt = (id, val) => { if(document.getElementById(id)) document.getElementById(id).innerText = val; };
+            setTxt('calc-memanjang', dP.toFixed(0) + " m²"); 
+            setTxt('calc-melebar', dL.toFixed(0) + " m²");
+            setTxt('calc-atap', al.toFixed(0) + " m²"); 
+            setTxt('calc-teras', tr.toFixed(0) + " m²");
+            setTxt('calc-stapel', permStapel.toFixed(0) + " m²"); 
+            setTxt('calc-awal', luasAwal.toFixed(0) + " m²");
+            setTxt('calc-lantai', "-" + lantaiNon.toFixed(0) + " m²"); 
+            setTxt('calc-akhir', Math.max(0, sasaranAkhir).toFixed(0) + " m²");
+            setTxt('calc-insek', dInsek.toFixed(1) + " L"); 
+            setTxt('calc-fumi', Math.round(dFumi) + " Btr");
+        }
+
+        // ==================== 5. SUBMIT KEGIATAN (PETUGAS) ====================
+        async function submitKegiatan(e) {
+            e.preventDefault(); 
+            showLoader(currentEditRowId ? "Menyimpan Perubahan..." : "Mengirim Laporan...");
+            
+            try {
+                let komoditasArr = [];
+                document.querySelectorAll('.komo-chk:checked').forEach(c => komoditasArr.push(c.value));
+                
+                let n = parseInt(document.getElementById('input-jml-stapel').value) || 0;
+                let detailStapel = [];
+                for(let i=1; i<=n; i++) {
+                    detailStapel.push({ 
+                        no: i, 
+                        tonase: document.getElementById(`stapel-tonase-${i}`)?.value || 0, 
+                        komoditas: document.getElementById(`stapel-komoditas-${i}`)?.value || "-"
+                    });
+                }
+
+                let fumiArr = []; let detailFumi = [];
+                document.querySelectorAll('.fumi-chk:checked').forEach(c => {
+                    fumiArr.push(c.value);
+                    let loc = document.getElementById(`jml-fumi-${c.value.replace(/\s+/g,'-')}`);
+                    if(loc) {
+                        detailFumi.push({ nama: c.value, jumlah_butir: loc.value + " Butir" });
+                    } else {
+                        detailFumi.push({ nama: c.value, jumlah_butir: "Sesuai Kalkulasi Auto" }); 
+                    }
+                });
+
+                let insekArr = []; let detailInsek = [];
+                document.querySelectorAll('.insek-chk:checked').forEach(c => {
+                    insekArr.push(c.value);
+                    let loc = document.getElementById(`jml-insek-${c.value.replace(/\s+/g,'-')}`);
+                    if(loc) {
+                        detailInsek.push({ nama: c.value, jumlah: loc.value + " L" });
+                    } else {
+                        detailInsek.push({ nama: c.value, jumlah: "Sesuai Kalkulasi Auto" }); 
+                    }
+                });
+
+                let nBroken = parseInt(document.getElementById('input-jml-broken')?.value) || 0;
+                let detailBroken = [];
+                for(let i=1; i<=nBroken; i++) {
+                    detailBroken.push({
+                        no: i,
+                        p: document.getElementById(`broken-p-${i}`)?.value || 0,
+                        l: document.getElementById(`broken-l-${i}`)?.value || 0,
+                        t: document.getElementById(`broken-t-${i}`)?.value || 0
+                    });
+                }
+
+                let hamaArr = [];
+                document.querySelectorAll('.hama-chk:checked').forEach(c => hamaArr.push(c.value));
+                let hamaStr = hamaArr.join(", ");
+
+                let calcObj = { 
+                    luas_sasaran: document.getElementById('calc-akhir').innerText, 
+                    dosis_fumi: document.getElementById('calc-fumi').innerText, 
+                    dosis_insek: document.getElementById('calc-insek').innerText,
+                    jml_broken: nBroken,
+                    detail_broken: detailBroken,
+                    detail_insek: detailInsek,
+                    memanjang: document.getElementById('calc-memanjang').innerText,
+                    melebar: document.getElementById('calc-melebar').innerText,
+                    atap: document.getElementById('calc-atap').innerText,
+                    teras: document.getElementById('calc-teras').innerText,
+                    awal: document.getElementById('calc-awal').innerText,
+                    lantai: document.getElementById('calc-lantai').innerText
+                };
+                
+                let tglGabungan = document.getElementById('input-tgl-mulai').value + " s/d " + document.getElementById('input-tgl-selesai').value;
+
+                const actionType = currentEditRowId ? "editAktivitasFull" : "addAktivitas";
+                const payload = {
+                    action: actionType, 
+                    rowId: currentEditRowId, 
+                    data: {
+                        petugas: currentUser, 
+                        komper: document.getElementById('input-komper').value, 
+                        unit: document.getElementById('input-unit').value,
+                        nomorSpk: document.getElementById('auto-spk').value, 
+                        jenis: document.getElementById('input-kegiatan').value,
+                        ukuranP: document.getElementById('info-gudang-p').innerText,
+                        ukuranL: document.getElementById('info-gudang-l').innerText,
+                        ukuranT: document.getElementById('info-gudang-t').innerText,
+                        tanggal: tglGabungan, 
+                        totalTonaseKomoditas: document.getElementById('display-total-tonase').innerText, 
+                        brokenSpace: document.getElementById('input-broken-space').value || 0,
+                        jmlStapel: n, 
+                        detailStapelJSON: JSON.stringify(detailStapel),
+                        insektisida: insekArr.join(", "),
+                        fumigan: fumiArr.join(", "), 
+                        detailFumiganJSON: JSON.stringify(detailFumi), 
+                        hama: hamaStr,
+                        tingkatSerangan: document.getElementById('input-tingkat-serangan').value, 
+                        jmlPlastik: document.getElementById('input-jml-plastik').value || 0,
+                        kalkulasiJSON: JSON.stringify(calcObj),
+                        keterangan: (document.getElementById('input-keterangan') ? document.getElementById('input-keterangan').value : "")
+                    }
+                };
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+                await syncDatabase(); 
+                currentEditRowId = null; 
+                goBack();
+            }
+            catch (err) {
+                hideLoader();
+                showDialog('Gagal Menyimpan', 'Terjadi kesalahan sistem: ' + err.message);
+                console.error("Error Submit Kegiatan: ", err);
+            }
+        } 
+
+        function openEditFull(rowId) {
+            const a = aktivitas_list.find(x => x.rowId === rowId);
+            if(!a) return;
+            
+            currentEditRowId = rowId;
+            document.querySelector('#form-kegiatan-screen h2').innerText = "Edit Laporan Kegiatan";
+            
+            const selK = document.getElementById('input-komper');
+            selK.innerHTML = `<option value="${a.Komper}">${a.Komper}</option>`;
+            selK.value = a.Komper;
+            
+            const selU = document.getElementById('input-unit');
+            selU.disabled = false;
+            selU.innerHTML = `<option value="${a.Unit}">${a.Unit}</option>`;
+            selU.value = a.Unit;
+            
+            document.getElementById('auto-spk').value = a.Nomor_SPK;
+            document.getElementById('input-kegiatan').value = a.Jenis;
+            
+            document.getElementById('dynamic-inputs-container').classList.remove('hidden');
+            const gudangData = DB_GUDANG.find(g => g.Gudang === a.Komper && g.Unit === a.Unit);
+            if(gudangData) {
+                document.getElementById('info-gudang-p').innerText = gudangData.Panjang || 0;
+                document.getElementById('info-gudang-l').innerText = gudangData.Lebar || 0;
+                document.getElementById('info-gudang-t').innerText = gudangData.Tinggi || 0;
+            }
+            
+            if (a.Tgl_Pelaksanaan) {
+                let tgls = a.Tgl_Pelaksanaan.split(' s/d ');
+                document.getElementById('input-tgl-mulai').value = tgls[0] || '';
+                document.getElementById('input-tgl-selesai').value = tgls[1] || '';
+            }
+            
+            document.querySelectorAll('.komo-chk').forEach(chk => chk.checked = false); 
+            document.getElementById('input-jml-stapel').value = a.Jml_Stapel;
+            renderStapelForms(); 
+
+            try {
+                let detailStapel = JSON.parse(a.Detail_Stapel_JSON);
+                detailStapel.forEach(st => {
+                    let i = st.no;
+                    if(document.getElementById(`stapel-tonase-${i}`)) {
+                        document.getElementById(`stapel-tonase-${i}`).value = st.tonase;
+                        document.getElementById(`stapel-komoditas-${i}`).value = st.komoditas;
+                                                                            
+                        let chk = document.querySelector(`.komo-chk[value="${st.komoditas}"]`);
+                        if(chk) chk.checked = true;
+                    }
+                });
+            } catch(e) {}
+            
+            document.getElementById('input-broken-space').value = a.Broken_Space;
+            
+            try {
+                let kalkulasi = JSON.parse(a.Hasil_Kalkulasi_JSON);
+                if (kalkulasi.jml_broken !== undefined) {
+                    document.getElementById('input-jml-broken').value = kalkulasi.jml_broken;
+                    renderBrokenForms(); 
+                    
+                    if (kalkulasi.detail_broken) {
+                        kalkulasi.detail_broken.forEach(br => {
+                            let i = br.no;
+                            if(document.getElementById(`broken-p-${i}`)) {
+                                document.getElementById(`broken-p-${i}`).value = br.p;
+                                document.getElementById(`broken-l-${i}`).value = br.l;
+                                document.getElementById(`broken-t-${i}`).value = br.t;
+                            }
+                        });
+                    }
+                    hitungKalkulasiBroken();
+                }
+            } catch(e) {}
+            
+            document.querySelectorAll('.insek-chk').forEach(chk => chk.checked = false);
+            let savedInsek = (a.Insektisida || "").split(', ');
+            savedInsek.forEach(f => {
+                let chk = document.querySelector(`.insek-chk[value="${f}"]`);
+                if(chk) chk.checked = true;
+            });
+            onInsekChange(); 
+            
+            try {
+                let kalkulasi = JSON.parse(a.Hasil_Kalkulasi_JSON);
+                if (kalkulasi.detail_insek) {
+                    kalkulasi.detail_insek.forEach(di => {
+                        let inputLoc = document.getElementById(`jml-insek-${di.nama.replace(/\s+/g,'-')}`);
+                        if(inputLoc) inputLoc.value = parseFloat(di.jumlah) || 0;
+                    });
+                }
+            } catch(e) {}
+            
+            const fumiInputs = document.getElementById('fumigasi-inputs');
+            const calcBoxFumi = document.getElementById('calc-box-fumi');
+            
+            if(a.Jenis.toLowerCase().includes('fumigasi')) {
+                fumiInputs.classList.remove('hidden');
+                calcBoxFumi.classList.remove('hidden'); calcBoxFumi.classList.add('flex');
+                
+                document.querySelectorAll('.fumi-chk').forEach(chk => chk.checked = false);
+                let fumiArr = (a.Fumigan_Terpilih || "").split(', ');
+                fumiArr.forEach(f => {
+                    let chk = document.querySelector(`.fumi-chk[value="${f}"]`);
+                    if(chk) chk.checked = true;
+                });
+                onFumiganChange(); 
+                
+                try {
+                    let detailFumi = JSON.parse(a.Detail_Alokasi_Fumigan_JSON);
+                    detailFumi.forEach(df => {
+                        let inputLoc = document.getElementById(`jml-fumi-${df.nama.replace(/\s+/g,'-')}`);
+                        if(inputLoc) inputLoc.value = parseInt(df.jumlah_butir) || 0;
+                    });
+                } catch(e) {}
+                
+                document.querySelectorAll('.hama-chk').forEach(chk => chk.checked = false);
+                let savedHama = (a.Hama || "").split(', ');
+                savedHama.forEach(h => {
+                    let chk = document.querySelector(`.hama-chk[value="${h}"]`);
+                    if(chk) chk.checked = true;
+                });
+                
+                document.getElementById('input-tingkat-serangan').value = a.Tingkat_Serangan;
+                document.getElementById('input-jml-plastik').value = a.Jml_Plastik;
+            } else {
+                fumiInputs.classList.add('hidden');
+                calcBoxFumi.classList.add('hidden'); calcBoxFumi.classList.remove('flex');
+            }
+            
+            if(document.getElementById('input-keterangan')) {
+                document.getElementById('input-keterangan').value = a.Keterangan || "";
+            }
+            
+            hitungKalkulasi();
+            
+            document.getElementById('detail-laporan-screen').classList.add('hidden');
+            document.getElementById('detail-laporan-screen').classList.remove('flex');
+            showScreen('form-kegiatan-screen');
+        }
+
+        // ==================== 6. VIEWS & ADMIN GENERATE ====================
+        function renderAktivitasView() {
+            const cAdmin = document.getElementById('admin-aktivitas-list'); 
+            const cPetugas = document.getElementById('petugas-history-list');
+            cAdmin.innerHTML = ""; cPetugas.innerHTML = "";
+            
+            aktivitas_list.forEach(a => {
+                cAdmin.innerHTML += `
+                    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+                        <div class="flex justify-between items-start border-b pb-3 mb-3">
+                            <div><p class="font-black text-gray-800 text-lg">${a.Nomor_SPK}</p><p class="text-sm font-bold text-blue-600">${a.Petugas.toUpperCase()} - ${a.Jenis}</p></div>
+                            <span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1.5 rounded-full">SELESAI</span>
+                        </div>
+                        <div class="text-sm text-gray-600 space-y-1 mb-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                            <p><b>Lokasi:</b> ${a.Komper} ${a.Unit}</p>
+                            <p><b>Tanggal:</b> ${a.Tgl_Pelaksanaan}</p>
+                            <p><b>Total Tonase:</b> ${a.Total_Tonase_Komoditas} Ton</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="bukaDetailLaporan(${a.rowId})" class="bg-blue-100 text-blue-700 border border-blue-200 px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-200 transition"><i class="fa-solid fa-eye"></i></button>
+                            <button onclick="openEditFull(${a.rowId})" class="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-50 transition"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="konfirmasiDelete(${a.rowId})" class="bg-red-100 text-red-700 border border-red-200 px-4 py-2 rounded-xl text-sm font-bold hover:bg-red-200 transition"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>`;
+                    
+                if(a.Petugas.toLowerCase() === currentUser.toLowerCase()) {
+                    cPetugas.innerHTML += `
+                    <div onclick="bukaDetailLaporan(${a.rowId})" class="bg-white p-4 rounded-xl border border-gray-200 flex items-center justify-between shadow-sm cursor-pointer hover:bg-blue-50 transition-colors mb-3">
+                        <div class="flex flex-col">
+                            <span class="font-bold text-gray-800">${a.Nomor_SPK}</span>
+                            <span class="text-xs font-medium text-gray-500">${a.Komper} - ${a.Unit}</span>
+                            <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full w-max mt-1">${a.Jenis}</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-400"></i>
+                    </div>`;
+                }
+            });
+        }
+
+        function renderSPKView() {
+            const container = document.getElementById('admin-spk-list'); container.innerHTML = "";
+            spk_list.forEach(spk => {
+                const c = spk.Status === 'Sudah Dikerjakan' ? 'bg-green-100 text-green-700 border-l-green-500' : 'bg-amber-100 text-amber-700 border-l-amber-500';
+                container.innerHTML += `<div class="bg-white p-4 rounded-xl border border-l-4 ${c} shadow-sm flex justify-between items-center"><div class="pr-2"><p class="font-bold text-gray-800 text-base">${spk.Nomor_SPK}</p><p class="text-xs font-medium text-gray-500 mt-1">${spk.Komper} - ${spk.Unit_Gudang}</p><p class="text-[10px] text-gray-400 mt-1"><i class="fa-regular fa-calendar mr-1"></i>${spk.Tanggal}</p></div><span class="text-[10px] font-bold px-2 py-1 rounded-full text-center whitespace-nowrap ${c.split(' ')[0]} ${c.split(' ')[1]}">${spk.Status}</span></div>`;
+            });
+        }
+
+        function bukaDetailLaporan(rowId) {
+            const a = aktivitas_list.find(x => x.rowId === rowId);
+            if(!a) return;
+
+            document.getElementById('det-spk').innerText = a.Nomor_SPK;
+            document.getElementById('det-kegiatan').innerText = a.Jenis;
+            document.getElementById('det-waktu').innerText = a.Tgl_Pelaksanaan;
+            document.getElementById('det-lokasi').innerText = `${a.Komper} - ${a.Unit}`;
+
+            let gudang = DB_GUDANG.find(g => g.Gudang === a.Komper && g.Unit === a.Unit);
+            if(gudang) {
+                document.getElementById('det-ukuran').innerText = `P: ${gudang.Panjang}m | L: ${gudang.Lebar}m | T: ${gudang.Tinggi}m`;
+                let panjang = parseGudangVal(gudang.Panjang, 0);
+                let lebar = parseGudangVal(gudang.Lebar, 0);
+                let tinggi = parseGudangVal(gudang.Tinggi, 0);
+                let p_sp = parseGudangVal(gudang.P_SP, parseGudangVal(gudang.Panjang_SP, 2)); 
+                let l_sp = parseGudangVal(gudang.L_SP, parseGudangVal(gudang.Lebar_SP, 2));
+                let tot_t = parseGudangVal(gudang.Tot_T, parseGudangVal(gudang.Total_Teras, 0));
+                
+                document.getElementById('det-calc-p').innerText = (panjang * tinggi * p_sp).toFixed(1) + " m2";
+                document.getElementById('det-calc-l').innerText = (lebar * tinggi * l_sp).toFixed(1) + " m2";
+                document.getElementById('det-calc-a').innerText = (panjang * lebar * 2).toFixed(1) + " m2";
+                document.getElementById('det-calc-t').innerText = (tot_t * 1).toFixed(1) + " m2";
+            } else {
+                document.getElementById('det-ukuran').innerText = "-";
+            }
+
+            document.getElementById('det-tonase').innerText = `${a.Total_Tonase_Komoditas} Ton`;
+            document.getElementById('det-stapel').innerText = `${a.Jml_Stapel} Stapel`;
+            document.getElementById('det-broken').innerText = `${a.Broken_Space} Ton`;
+
+            let listKomoditas = new Set();
+            try {
+                let stapelData = JSON.parse(a.Detail_Stapel_JSON);
+                stapelData.forEach(st => listKomoditas.add(st.komoditas));
+            } catch(e) {}
+            document.getElementById('det-komoditas').innerText = Array.from(listKomoditas).join(", ") || "-";
+
+            document.getElementById('det-insek').innerText = a.Insektisida || "-";
+            
+            let kalkulasi = {};
+            try { kalkulasi = JSON.parse(a.Hasil_Kalkulasi_JSON); } catch(e) {}
+            document.getElementById('det-total-insek').innerText = kalkulasi.dosis_insek || "-";
+
+            const fumiBox = document.getElementById('det-fumi-box');
+            if (a.Jenis.toLowerCase().includes('fumigasi')) {
+                fumiBox.classList.remove('hidden');
+                document.getElementById('det-fumi-jenis').innerText = a.Fumigan_Terpilih;
+                document.getElementById('det-total-fumi').innerText = kalkulasi.dosis_fumi || "-";
+                document.getElementById('det-hama').innerText = a.Hama || "-";
+                document.getElementById('det-serangan').innerText = a.Tingkat_Serangan || "-";
+                document.getElementById('det-plastik').innerText = a.Jml_Plastik || "0";
+            } else {
+                fumiBox.classList.add('hidden');
+            }
+
+            // --- LOGIKA TOMBOL EDIT & DOWNLOAD PDF ---
+            const btnEditDetail = document.getElementById('btn-edit-petugas');
+            const btnDownload = document.getElementById('btn-download-pdf');
+            
+            if (a.Link_PDF_Final && a.Link_PDF_Final !== "") {
+                btnDownload.classList.remove('hidden'); 
+                btnDownload.onclick = function() { window.open(a.Link_PDF_Final, '_blank'); };
+                btnEditDetail.classList.add('hidden'); 
+            } else {
+                btnDownload.classList.add('hidden');
+                if (currentRole.toLowerCase() === 'admin') {
+                    btnEditDetail.classList.add('hidden');
+                } else {
+                    btnEditDetail.classList.remove('hidden');
+                    btnEditDetail.onclick = function() { openEditFull(a.rowId); };
+                }
+            }
+            showScreen('detail-laporan-screen');
+        }
+
+        let deleteTargetRow = null;
+        function konfirmasiDelete(rowId) {
+            deleteTargetRow = rowId;
+            document.getElementById('dialog-title').innerText = "Hapus Laporan"; 
+            document.getElementById('dialog-message').innerText = "Yakin ingin menghapus laporan ini? Data yang dihapus dari sistem tidak dapat dikembalikan.";
+            
+            document.getElementById('dialog-btns').innerHTML = `
+                <div class="flex space-x-3">
+                    <button onclick="closeDialog()" class="flex-1 bg-gray-200 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-300 transition">Batal</button>
+                    <button onclick="eksekusiDelete()" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-700 shadow-md transition">Hapus</button>
+                </div>
+            `;
+            
+            document.getElementById('custom-dialog').classList.remove('hidden'); 
+            document.getElementById('custom-dialog').classList.add('flex');
+        }
+
+        async function eksekusiDelete() {
+            closeDialog();
+            showLoader("Menghapus Data Laporan...");
+            try {
+                const payload = { action: "deleteAktivitas", rowId: deleteTargetRow };
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+                await syncDatabase(); 
+            } catch(err) {
+                showDialog('Error', err.toString());
+            }
+        }
+
+        function openEdit(id, tgl, tonase, broken) {
+            document.getElementById('edit-row-id').value = id;
+            document.getElementById('edit-tgl').value = tgl;
+            document.getElementById('edit-tonase').value = tonase;
+            document.getElementById('edit-broken').value = broken;
+            const m = document.getElementById('modal-edit'); m.classList.remove('hidden'); m.classList.add('flex');
+            setTimeout(()=> { m.querySelector('div').classList.remove('scale-95'); }, 10);
+        }
+        function closeModalEdit() { 
+            const m = document.getElementById('modal-edit'); m.querySelector('div').classList.add('scale-95');
+            setTimeout(()=> { m.classList.add('hidden'); m.classList.remove('flex'); }, 200);
+        }
+        async function saveEdit() {
+            showLoader("Menyimpan Edit..."); closeModalEdit();
+            const pay = { action: 'editAktivitas', rowId: document.getElementById('edit-row-id').value, data: { tanggal: document.getElementById('edit-tgl').value, totalTonase: document.getElementById('edit-tonase').value, brokenSpace: document.getElementById('edit-broken').value }};
+            await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(pay) });
+            await syncDatabase();
+        }
+
+        // ==================== AUTH & UTILS ====================
+        function handleLogin(e) {
+            e.preventDefault(); 
+            const u = document.getElementById('username').value.trim().toLowerCase(); 
+            const p = document.getElementById('password').value;
+            const usr = DB_PEGAWAI.find(x => String(x.Username).toLowerCase() === u && String(x.Password) === p && String(x.Status).trim() === "Aktif");
+            
+            if(usr) {
+                currentRole = String(usr.Role).toLowerCase(); currentUser = usr.Username;
+                document.getElementById(currentRole + '-display-name').textContent = usr.Nama;
+                renderAktivitasView(); showScreen('dashboard-' + currentRole + '-screen');
+            } else { showDialog('Akses Ditolak', 'Username/Password salah atau akun tidak aktif.'); }
+        }
+
+        function showLoader(txt) { document.getElementById('loader-text').innerText = txt; document.getElementById('global-loader').classList.remove('hidden'); document.getElementById('global-loader').classList.add('flex'); }
+        function hideLoader() { document.getElementById('global-loader').classList.add('hidden'); document.getElementById('global-loader').classList.remove('flex'); }
+
+        function promptLogout() { 
+              document.getElementById('dialog-title').innerText = "Konfirmasi Logout"; 
+              document.getElementById('dialog-message').innerText = "Apakah Anda yakin ingin keluar dari aplikasi?";
+              
+              document.getElementById('dialog-btns').innerHTML = `
+                  <div class="flex space-x-3">
+                      <button onclick="closeDialog()" class="flex-1 bg-gray-200 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-300 transition">Batal</button>
+                      <button onclick="executeLogout()" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-700 shadow-md transition">Keluar</button>
+                  </div>
+              `;
+              
+              document.getElementById('custom-dialog').classList.remove('hidden'); 
+              document.getElementById('custom-dialog').classList.add('flex'); 
+          }
+
+        function executeLogout() {
+              closeDialog();
+              document.getElementById('login-form').reset(); 
+              currentRole = ""; 
+              currentUser = ""; 
+              
+              if(document.getElementById('petugas-display-name')) document.getElementById('petugas-display-name').textContent = "Petugas";
+              if(document.getElementById('admin-display-name')) document.getElementById('admin-display-name').textContent = "Admin";
+              
+              window.history.replaceState({ screen: 'login-screen' }, '', '');
+              showScreen('login-screen', false); 
+          }
+
+          function closeDialog() {
+              document.getElementById('custom-dialog').classList.add('hidden');
+              document.getElementById('custom-dialog').classList.remove('flex');
+          }
+
+          function showDialog(title, msg) {
+              document.getElementById('dialog-title').innerText = title; 
+              document.getElementById('dialog-message').innerText = msg;
+              
+              document.getElementById('dialog-btns').innerHTML = `
+                  <button onclick="closeDialog()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">Mengerti</button>
+              `;
+              
+              document.getElementById('custom-dialog').classList.remove('hidden'); 
+              document.getElementById('custom-dialog').classList.add('flex');
+          }
+
+        function showScreen(screenId, pushHistory = true) {
+            document.querySelectorAll('.screen-view').forEach(el => { 
+                el.classList.add('hidden'); 
+                el.classList.remove('flex'); 
+            });
+            const target = document.getElementById(screenId);
+            if (target) {
+                target.classList.remove('hidden'); 
+                target.classList.add('flex'); 
+                target.scrollTo(0,0);
+                
+                if(pushHistory) {
+                    window.history.pushState({ screen: screenId }, '', '');
+                }
+            }
+        }
+
+          function goBack() {
+              if (window.history.state && window.history.state.screen) {
+                  window.history.back();
+              } else {
+                  if (currentRole.toLowerCase() === 'admin') {
+                      showScreen('dashboard-admin-screen');
+                  } else if (currentRole.toLowerCase() === 'petugas') {
+                      showScreen('dashboard-petugas-screen');
+                  } else {
+                      showScreen('login-screen');
+                  }
+              }
+          }
+
+          function togglePassword() {
+              const pwdInput = document.getElementById('password');
+              const eyeIcon = document.getElementById('eye-icon');
+              
+              if (pwdInput.type === 'password') {
+                  pwdInput.type = 'text';
+                  eyeIcon.classList.remove('fa-eye');
+                  eyeIcon.classList.add('fa-eye-slash'); 
+              } else {
+                  pwdInput.type = 'password';
+                  eyeIcon.classList.remove('fa-eye-slash');
+                  eyeIcon.classList.add('fa-eye'); 
+              }
+          }
+
+          window.addEventListener('popstate', (event) => {
+              if (event.state && event.state.screen) {
+                  if (event.state.screen === 'login-screen' && currentRole !== "") {
+                      window.history.forward(); 
+                      promptLogout();
+                  } else {
+                      showScreen(event.state.screen, false);
+                  }
+              }
+          });
+    </script>
+</body>
+</html>
