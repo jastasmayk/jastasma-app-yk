@@ -1138,10 +1138,10 @@
                 let l_sp = parseGudangVal(gudang.L_SP, parseGudangVal(gudang.Lebar_SP, 2));
                 let tot_t = parseGudangVal(gudang.Tot_T, parseGudangVal(gudang.Total_Teras, 0));
                 
-                document.getElementById('det-calc-p').innerText = (panjang * tinggi * p_sp).toFixed(1) + " m2";
-                document.getElementById('det-calc-l').innerText = (lebar * tinggi * l_sp).toFixed(1) + " m2";
-                document.getElementById('det-calc-a').innerText = (panjang * lebar * 2).toFixed(1) + " m2";
-                document.getElementById('det-calc-t').innerText = (tot_t * 1).toFixed(1) + " m2";
+                document.getElementById('det-calc-p').innerText = (panjang * tinggi * p_sp).toFixed(1) + " m²";
+                document.getElementById('det-calc-l').innerText = (lebar * tinggi * l_sp).toFixed(1) + " m²";
+                document.getElementById('det-calc-a').innerText = (panjang * lebar * 2).toFixed(1) + " m²";
+                document.getElementById('det-calc-t').innerText = (tot_t * 1).toFixed(1) + " m²";
             } else {
                 document.getElementById('det-ukuran').innerText = "-";
             }
@@ -1175,7 +1175,7 @@
                 fumiBox.classList.add('hidden');
             }
 
-            // --- LOGIKA TOMBOL EDIT & DOWNLOAD PDF ---
+            // --- LOGIKA TOMBOL EDIT & DOWNLOAD PDF (SUDAH DIRAPIKAN) ---
             const btnEditDetail = document.getElementById('btn-edit-petugas');
             const btnDownload = document.getElementById('btn-download-pdf');
             
@@ -1185,28 +1185,10 @@
                 btnEditDetail.classList.add('hidden'); 
             } else {
                 btnDownload.classList.add('hidden');
-                // if (currentRole.toLowerCase() === 'admin') {
-                //     btnEditDetail.classList.add('hidden');
-                    // --- LOGIKA TOMBOL EDIT & DOWNLOAD PDF ---
-                    const btnEditDetail = document.getElementById('btn-edit-petugas');
-                    const btnDownload = document.getElementById('btn-download-pdf');
-                    
-                    if (a.Link_PDF_Final && a.Link_PDF_Final !== "") {
-                        btnDownload.classList.remove('hidden'); 
-                        btnDownload.onclick = function() { window.open(a.Link_PDF_Final, '_blank'); };
-                        btnEditDetail.classList.add('hidden'); // PDF sudah final, kunci fitur edit
-                    } else {
-                        btnDownload.classList.add('hidden');
-                        
-                        // BERIKAN IZIN EDIT UNTUK PETUGAS & ADMIN JIKA PDF BELUM FINAL
-                        btnEditDetail.classList.remove('hidden');
-                        btnEditDetail.onclick = function() { openEditFull(a.rowId); };
-                    }
-                } else {
-                    btnEditDetail.classList.remove('hidden');
-                    btnEditDetail.onclick = function() { openEditFull(a.rowId); };
-                }
+                btnEditDetail.classList.remove('hidden');
+                btnEditDetail.onclick = function() { openEditFull(a.rowId); };
             }
+
             showScreen('detail-laporan-screen');
         }
 
